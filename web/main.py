@@ -41,15 +41,28 @@ async def ipfs_pin(
 
 @app.post('/upload/')
 async def upload(
-    lat: str = Form(...),
-    long: str = Form(...),
-    start: str = Form(...),
+    lat: int = Form(...),
+    long: int = Form(...),
+    start: float = Form(...),
+    direction: int = Form(...),
+    expected_hash: str = Form(...),
     file: UploadFile = File(...),
 ):
-    logger.info(f'New request: lat: {lat}, long: {long}, start: {start}')
+    logger.info(f'New request: lat: {lat}, long: {long}, '
+                f'start: {start}, direction: {direction}, '
+                f'expected hash: {expected_hash}')
     resp = await ipfs_add(file)
     resp_add = json.loads(resp)
-    resp = await ipfs_pin(resp_add['Hash'])
+    file_hash = resp_add['Hash']
+    if file_hash != expected_hash:
+        return JSONResponse(
+            status_code=400,
+            content={
+                'code': 'unexpected_hash',
+                'msg': f'expected hash: {expected_hash}, actual: {file_hash}'
+            }
+        )
+    resp = await ipfs_pin(file_hash)
     resp_pin = json.loads(resp)
     return JSONResponse(
         content={
