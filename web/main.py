@@ -1,7 +1,9 @@
 import json
 import logging
 import sys
+from datetime import datetime
 
+import psycopg
 import uvicorn
 import httpx
 from fastapi import (
@@ -16,6 +18,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
 
 app = FastAPI()
+pg_conn_str = "host=localhost dbname=postgres user=postgres password=password"
 
 
 async def ipfs_add(
@@ -39,10 +42,27 @@ async def ipfs_pin(
         return resp.text
 
 
+async def db_add(
+    file_hash: str,
+    lat: float,
+    long: float,
+    start_time: float,
+    direction: int,
+    address: str,
+):
+    start_time = datetime.fromtimestamp(start_time)
+    async with await psycopg.AsyncConnection.connect(pg_conn_str) as conn:
+        async with conn.cursor() as cur:
+            return await cur.execute(
+                'INSERT INTO video (hash, location, direction, start_time, address) VALUES (%s, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s, %s, %s)',
+                (file_hash, long, lat, direction, start_time, address),
+            )
+
+
 @app.post('/upload/')
 async def upload(
-    lat: int = Form(...),
-    long: int = Form(...),
+    lat: float = Form(...),
+    long: float = Form(...),
     start: float = Form(...),
     direction: int = Form(...),
     expected_hash: str = Form(...),
@@ -64,6 +84,7 @@ async def upload(
         )
     resp = await ipfs_pin(file_hash)
     resp_pin = json.loads(resp)
+    await db_add(file_hash, lat, long, start, direction, 'some address')
     return JSONResponse(
         content={
             'add': resp_add,
