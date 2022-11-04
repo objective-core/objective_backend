@@ -5,11 +5,16 @@ import psycopg
 from pydantic import BaseModel
 
 
+class Location(BaseModel):
+    lat: float
+    long: float
+    direction: int
+    radius: int
+
+
 class Video(BaseModel):
     uploader_address: str
-    location_lat: float
-    location_long: float
-    median_direction: int
+    location: Location
     uploaded_at: datetime
     start_time: datetime
     end_time: datetime
@@ -18,12 +23,9 @@ class Video(BaseModel):
 
 class VideoRequest(BaseModel):
     id: str
-    lat: float
-    long: float
-    radius: int
+    location: Location
     start_time: datetime
     end_time: datetime
-    direction: int
     reward: Decimal
     address: str
     video: Video = None
@@ -59,19 +61,18 @@ class VideoRequestManager:
                     );
                 ''', (
                         request.id,
-                        request.long,
-                        request.lat,
-                        request.radius,
+                        request.location.long,
+                        request.location.lat,
+                        request.location.radius,
                         request.start_time,
                         request.end_time,
-                        request.direction,
+                        request.location.direction,
                         request.reward,
                         request.address,
                     )
                 )
 
     async def add_video(self, request_id: str, video: Video):
-        print(f'R:{request_id}')
         async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
             async with conn.cursor() as cur:
                 await cur.execute('''
@@ -86,9 +87,9 @@ class VideoRequestManager:
                     WHERE request_id = %s AND file_hash is NULL
                 ''', (
                         video.uploader_address,
-                        video.location_lat,
-                        video.location_long,
-                        video.median_direction,
+                        video.location.lat,
+                        video.location.long,
+                        video.location.direction,
                         video.uploaded_at,
                         video.start_time,
                         video.end_time,

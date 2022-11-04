@@ -17,6 +17,7 @@ from models import (
     VideoRequestManager,
     Video,
     VideoRequest,
+    Location,
 )
 from ipfs import IPFSClient
 
@@ -53,14 +54,16 @@ async def upload(
                 'msg': f'expected hash: {expected_hash}, actual: {file_hash}'
             }
         )
-    resp = await ipfs_client.pin(file_hash)
-    resp_pin = json.loads(resp)
+    await ipfs_client.pin(file_hash)
     uploader_address = 'uploader-address'  # TODO: Change to the real one from auth headers.
     video = Video(
         uploader_address=uploader_address,
-        location_lat=lat,
-        location_long=long,
-        median_direction=median_direction,
+        location=Location(
+            lat=lat,
+            long=long,
+            direction=median_direction,
+            radius=0,
+        ),
         uploaded_at=datetime.now(),
         start_time=start,
         end_time=end,
@@ -72,10 +75,8 @@ async def upload(
         video=video,
     )
     return JSONResponse(
-        content={
-            'add': resp_add,
-            'pin': resp_pin,
-        }
+        status_code=201,
+        content=json.loads(video.json()),
     )
 
 
@@ -95,12 +96,14 @@ async def create_request(
     address = 'requestor-address'  # TODO: Change to the real one from auth headers.
     video_request = VideoRequest(
         id=id,
-        lat=lat,
-        long=long,
-        radius=radius,
+        location=Location(
+            lat=lat,
+            long=long,
+            direction=direction,
+            radius=radius,
+        ),
         start_time=start,
         end_time=end,
-        direction=direction,
         reward=reward,
         address=address,
     )
@@ -108,7 +111,10 @@ async def create_request(
     await video_request_manager.add_request(
         request=video_request,
     )
-    return JSONResponse(status_code=201)
+    return JSONResponse(
+        status_code=201,
+        content=json.loads(video_request.json()),
+    )
 
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=8000)
