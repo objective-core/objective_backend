@@ -6,10 +6,35 @@ python main.py
 
 ## Examples
 
+### Create a request (internal endpoint)
+
+```bash
+curl -v \
+-F lat=12 \
+-F long=12 \
+-F start=123123 \
+-F end=123140 \
+-F direction=12 \
+-F reward=42 \
+-F radius=12 \
+-F id=test-request-id \
+http://127.0.0.1:8000/internal/request/
+```
+
 ### Upload a file
 
 ```bash
-curl -v -F lat=12 -F long=12 -F start=123123 -F direction=12 -F expected_hash=QmbCFLdj8FfgKZDquX6zb2CB3pmfj3spKpSam9zo9ZhSiU -F file=@requirements.in http://127.0.0.1:8000/upload/
+curl -v \
+-F lat=12 \
+-F long=12 \
+-F start=123123 \
+-F end=123140 \
+-F median_direction=12 \
+-F signature=test \
+-F request_id=test-request-id \
+-F expected_hash=QmNT8axScpvoXJeKaoeZcD7E9ew9eSNp4EePXjwB62mrv4 \
+-F file=@requirements.in \
+http://127.0.0.1:8000/upload/
 ```
 
 Response:

@@ -7,26 +7,26 @@ from pydantic import BaseModel
 
 class Video(BaseModel):
     uploader_address: str
-    actual_location_lat: float
-    actual_location_long: float
-    actual_median_direction: int
+    location_lat: float
+    location_long: float
+    median_direction: int
     uploaded_at: datetime
-    actual_start_time: datetime
-    actual_end_time: datetime
+    start_time: datetime
+    end_time: datetime
     file_hash: str
 
 
 class VideoRequest(BaseModel):
     id: str
-    location_lat: float
-    location_long: float
+    lat: float
+    long: float
     radius: int
     start_time: datetime
     end_time: datetime
     direction: int
     reward: Decimal
     address: str
-    video: Video
+    video: Video = None
 
 
 class VideoRequestManager:
@@ -40,16 +40,14 @@ class VideoRequestManager:
                     INSERT INTO video_request 
                     (
                         request_id,
-                        request_location_lat,
-                        request_location_long,
+                        request_location,
                         request_radius, 
                         request_start_time,
                         request_end_time,
                         request_direction,
                         reward,
-                        requestor_address,
-                    )
-                    VALUES (
+                        requestor_address
+                    ) VALUES (
                         %s,
                         ST_SetSRID(ST_MakePoint(%s, %s), 4326),
                         %s,
@@ -57,24 +55,51 @@ class VideoRequestManager:
                         %s,
                         %s,
                         %s,
-                        %s,
-                    )
-                    ''',
-                    (
+                        %s
+                    );
+                ''', (
                         request.id,
-                        request.location_long,
-                        request.location_lat,
+                        request.long,
+                        request.lat,
                         request.radius,
                         request.start_time,
                         request.end_time,
                         request.direction,
                         request.reward,
                         request.address,
-                    ),
+                    )
                 )
 
     async def add_video(self, request_id: str, video: Video):
-        raise NotImplementedError
+        print(f'R:{request_id}')
+        async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('''
+                    UPDATE video_request
+                    SET uploader_address = %s,
+                        actual_location = ST_SetSRID(ST_MakePoint(%s, %s), 4326),
+                        actual_median_direction = %s,
+                        uploaded_at = %s,
+                        actual_start_time = %s,
+                        actual_end_time = %s,
+                        file_hash = %s
+                    WHERE request_id = %s AND file_hash is NULL
+                ''', (
+                        video.uploader_address,
+                        video.location_lat,
+                        video.location_long,
+                        video.median_direction,
+                        video.uploaded_at,
+                        video.start_time,
+                        video.end_time,
+                        video.file_hash,
+                        request_id,
+                    )
+                )
+                if cur.rowcount != 1:
+                    raise Exception(
+                        'this request is already fulfilled or does not exist'
+                    )
 
     async def get_request(self, request_id: str) -> VideoRequest:
         raise NotImplementedError
