@@ -1,0 +1,12 @@
+api.objective.camera {
+	tls bps@dzen.ws
+	encode zstd gzip
+	reverse_proxy localhost:8000
+}
+
+ipfs.objective.camera {
+	tls bps@dzen.ws
+	encode zstd gzip
+	uri replace / /ipfs/
+	reverse_proxy localhost:8080
+}
