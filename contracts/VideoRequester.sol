@@ -12,16 +12,17 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
 
     struct VideoRequest { 
         string request_id;
-        uint lat;
-        uint long;
-        uint start;
-        uint stop;
+        uint32 lat;
+        uint32 long;
+        uint32 start;
+        uint32 stop;
+        uint8 direction;
         uint reward;
         string url;
         address requester;
     }
 
-    event VideoRequested(address requester, uint lat, uint long, uint start, uint end, uint reward);
+    event VideoRequested(address requester, uint32 lat, uint32 long, uint32 start, uint32 end, uint8 direction, uint reward);
     event VideoReceived(string url);
 
     mapping (string => VideoRequest) requests;
@@ -34,10 +35,10 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
         fee = (1 * LINK_DIVISIBILITY) / 10; // 0,1 * 10**18 (Varies by network and job)
     }
  
-    function submitRequest (string memory id, uint lat, uint long, uint start, uint end) payable external {
-        emit VideoRequested(msg.sender, lat, long, start, end, msg.value);
+    function submitRequest (string memory id, uint32 lat, uint32 long, uint32 start, uint32 end, uint8 direction) payable external {
+        emit VideoRequested(msg.sender, lat, long, start, end, direction, msg.value);
     
-        requests[id] = VideoRequest(id, lat, long, start, end, msg.value, "", msg.sender);
+        requests[id] = VideoRequest(id, lat, long, start, end, direction, msg.value, "", msg.sender);
     }
 
     function checkRequest(string memory id) public {
@@ -72,4 +73,3 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
         url = request.url;
     }
 }
-
