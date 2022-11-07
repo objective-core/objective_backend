@@ -1,5 +1,6 @@
 import sys
 import logging
+import os
 
 import httpx
 from fastapi import (
@@ -12,7 +13,7 @@ logger = logging.getLogger()
 
 
 class IPFSClient:
-    def __init__(self, base_url='http://localhost:5001'):
+    def __init__(self, base_url):
         self.base_url = base_url
 
     async def add(

@@ -3,6 +3,7 @@ import logging
 import sys
 from datetime import datetime
 from decimal import Decimal
+import os
 
 import uvicorn
 from fastapi import (
@@ -26,8 +27,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
 
 app = FastAPI()
-pg_conn_str = "host=localhost dbname=postgres user=postgres password=password"
-
+pg_conn_str = f"host={os.getenv('PG_HOST', 'localhost')} dbname={os.getenv('PG_DB', 'obj')} user={os.getenv('PG_USER')} password={os.getenv('PG_PASSWORD')}"
 
 @app.post('/upload/')
 async def upload(
@@ -42,7 +42,7 @@ async def upload(
     file: UploadFile = File(...),
 ):
     logger.info(f'New upload request: request_id: {request_id}, signature: {signature}')
-    ipfs_client = IPFSClient()
+    ipfs_client = IPFSClient(base_url=os.getenv('IPFS_ENDPOINT', 'http://ipfs:5001'))
     resp = await ipfs_client.add(file)
     resp_add = json.loads(resp)
     file_hash = resp_add['Hash']
@@ -117,4 +117,4 @@ async def create_request(
     )
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

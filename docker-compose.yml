@@ -1,0 +1,55 @@
+version: "3.9"
+
+volumes:
+  postgres_data:
+    name: postgres_data
+    external: true
+
+networks:
+  backend:
+    driver: bridge
+    enable_ipv6: false
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - "postgres"
+      - "ipfs"
+    ports:
+      - 8000:8000
+    networks:
+      - backend
+    environment:
+      - PG_PASSWORD=${PG_PASSWORD}
+      - PG_USER=${PG_USER}
+      - PG_HOST=${PG_HOST}
+      - PG_DB=obj
+
+  postgres:
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_DB=obj
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    build:
+      context: .
+      dockerfile: postgis.Dockerfile
+
+  ipfs:
+    image: ipfs/kubo
+    restart: always
+    ports:
+      - 4001:4001
+      - 5001:5001
+      - 8080:8080
+    networks:
+      - backend
