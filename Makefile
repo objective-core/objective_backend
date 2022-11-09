@@ -6,3 +6,7 @@ deps:
 
 tests: deps
 	pytest ./tests
+
+prod:
+	git pull
+	docker-compose up -d --build web
