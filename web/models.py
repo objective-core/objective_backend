@@ -62,8 +62,8 @@ class VideoRequestManager:
                     );
                 ''', (
                         request.id,
-                        request.location.long,
                         request.location.lat,
+                        request.location.long,
                         request.location.radius,
                         request.start_time,
                         request.end_time,
