@@ -2,7 +2,8 @@ from datetime import datetime
 from decimal import Decimal
 
 import psycopg
-from pydantic import BaseModel, List
+from pydantic import BaseModel
+from typing import List
 
 
 class Location(BaseModel):
