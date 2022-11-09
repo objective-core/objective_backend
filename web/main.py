@@ -21,6 +21,7 @@ from models import (
     Location,
 )
 from ipfs import IPFSClient
+from verification import get_address
 
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -55,7 +56,8 @@ async def upload(
             }
         )
     await ipfs_client.pin(file_hash)
-    uploader_address = 'uploader-address'  # TODO: Change to the real one from auth headers.
+    uploader_address = get_address(expected_hash, signature)
+
     video = Video(
         uploader_address=uploader_address,
         location=Location(
