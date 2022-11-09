@@ -134,9 +134,10 @@ class VideoRequestManager:
                 '''
                 )
                 result = []
-                for record in cur.fetchall():
+                rows = await cur.fetchall()
+                for record in rows:
                     request_id, lat, long, radius, start_time, end_time,\
-                    direction, reward, requestor_address, uploader_address,\
+                        direction, reward, requestor_address, uploader_address,\
                         actual_lat, actual_long, actual_median_direction,\
                         uploaded_at, actual_start_time, actual_end_time, file_hash = record
                     video_request = VideoRequest(
