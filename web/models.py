@@ -153,7 +153,7 @@ class VideoRequestManager:
                         reward=reward,
                         address=requestor_address,
                     )
-                    if not uploader_address:
+                    if uploader_address:
                         video_request.video = Video(
                             uploader_address=uploader_address,
                             location=Location(
