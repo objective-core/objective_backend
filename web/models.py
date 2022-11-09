@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 
 import psycopg
-from pydantic import BaseModel
+from pydantic import BaseModel, List
 
 
 class Location(BaseModel):
@@ -104,3 +104,66 @@ class VideoRequestManager:
 
     async def get_request(self, request_id: str) -> VideoRequest:
         raise NotImplementedError
+
+    async def get_last_10_requests(self, limit: int) -> List[VideoRequest]:
+        async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('''
+                    SELECT
+                        request_id,
+                        ST_x(request_location),
+                        ST_y(request_location)
+                        request_radius,
+                        request_start_time,
+                        request_end_time,
+                        request_direction,
+                        reward,
+                        requestor_address,
+                        uploader_address,
+                        ST_x(actual_location),
+                        ST_y(actual_location)
+                        actual_median_direction,
+                        uploaded_at,
+                        actual_start_time,
+                        actual_end_time,
+                        file_hash
+                    FROM video_request
+                    ORDER BY end_time DESC
+                    LIMIT 10
+                '''
+                )
+                result = List[VideoRequest]()
+                for record in cur:
+                    request_id, lat, long, radius, start_time, end_time,\
+                    direction, reward, requestor_address, uploader_address,\
+                        actual_lat, actual_long, actual_median_direction,\
+                        uploaded_at, actual_start_time, actual_end_time, file_hash = record
+                    video_request = VideoRequest(
+                        id=request_id,
+                        location=Location(
+                            lat=lat,
+                            long=long,
+                            direction=direction,
+                            radius=radius,
+                        ),
+                        start_time=start_time,
+                        end_time=end_time,
+                        reward=reward,
+                        address=requestor_address,
+                    )
+                    if not uploader_address:
+                        video_request.video = Video(
+                            uploader_address=uploader_address,
+                            location=Location(
+                                lat=actual_lat,
+                                long=actual_long,
+                                direction=actual_median_direction,
+                                radius=radius,
+                            ),
+                            uploaded_at=uploaded_at,
+                            start_time=actual_start_time,
+                            end_time=actual_end_time,
+                            file_hash=file_hash,
+                        )
+                    result.append(video_request)
+                return result
