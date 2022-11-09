@@ -82,9 +82,9 @@ async def upload(
     )
 
 @app.get('/requests')
-def get_requests():
+async def get_requests():
     video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
-    requests = video_request_manager.get_last_10_requests()
+    requests = await video_request_manager.get_last_10_requests()
     return JSONResponse(
         status_code=200,
         content=json.loads(requests.json()),
