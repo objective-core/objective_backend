@@ -87,7 +87,7 @@ async def get_requests():
     last_10_requests = await video_request_manager.get_last_10_requests()
     return JSONResponse(
         status_code=200,
-        content={'requests': [r.json() for r in last_10_requests]},
+        content={'requests': [json.loads(r.json()) for r in last_10_requests]},
     )
 
 
