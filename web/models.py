@@ -129,7 +129,7 @@ class VideoRequestManager:
                         actual_end_time,
                         file_hash
                     FROM video_request
-                    ORDER BY end_time DESC
+                    ORDER BY request_end_time DESC
                     LIMIT 10
                 '''
                 )
