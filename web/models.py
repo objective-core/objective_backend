@@ -133,7 +133,7 @@ class VideoRequestManager:
                     LIMIT 10
                 '''
                 )
-                result = List[VideoRequest]()
+                result = []
                 for record in cur:
                     request_id, lat, long, radius, start_time, end_time,\
                     direction, reward, requestor_address, uploader_address,\
