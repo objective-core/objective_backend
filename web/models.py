@@ -134,7 +134,7 @@ class VideoRequestManager:
                 '''
                 )
                 result = []
-                for record in cur:
+                for record in cur.fetchall():
                     request_id, lat, long, radius, start_time, end_time,\
                     direction, reward, requestor_address, uploader_address,\
                         actual_lat, actual_long, actual_median_direction,\
