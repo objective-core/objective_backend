@@ -113,7 +113,7 @@ class VideoRequestManager:
                     SELECT
                         request_id,
                         ST_x(request_location),
-                        ST_y(request_location)
+                        ST_y(request_location),
                         request_radius,
                         request_start_time,
                         request_end_time,
@@ -122,7 +122,7 @@ class VideoRequestManager:
                         requestor_address,
                         uploader_address,
                         ST_x(actual_location),
-                        ST_y(actual_location)
+                        ST_y(actual_location),
                         actual_median_direction,
                         uploaded_at,
                         actual_start_time,
