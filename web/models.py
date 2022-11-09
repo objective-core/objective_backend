@@ -106,7 +106,7 @@ class VideoRequestManager:
     async def get_request(self, request_id: str) -> VideoRequest:
         raise NotImplementedError
 
-    async def get_last_10_requests(self, limit: int) -> List[VideoRequest]:
+    async def get_last_10_requests(self) -> List[VideoRequest]:
         async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
             async with conn.cursor() as cur:
                 await cur.execute('''
