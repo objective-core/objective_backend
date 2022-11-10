@@ -93,6 +93,20 @@ async def get_requests():
     )
 
 
+@app.get('/requests/{request_id}')
+async def requests_by_id(
+        request_id: str,
+):
+    video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
+    request = await video_request_manager.get_request(
+        request_id=request_id,
+    )
+    return JSONResponse(
+        status_code=200,
+        content=json.loads(request.json()),
+    )
+
+
 @app.get('/requests_by_location')
 async def requests_by_location(
         lat: float,
