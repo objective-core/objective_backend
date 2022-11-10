@@ -268,7 +268,7 @@ class VideoRequestManager:
                     FROM video_request
                     WHERE uploader_address = %s
                     ORDER BY request_end_time DESC
-                ''', (address)
+                ''', (address,)
                 )
                 results = []
                 rows = await cur.fetchall()
@@ -304,7 +304,7 @@ class VideoRequestManager:
                     FROM video_request
                     WHERE requestor_address = %s
                     ORDER BY request_end_time DESC
-                ''', (address)
+                ''', (address,)
                 )
                 results = []
                 rows = await cur.fetchall()
