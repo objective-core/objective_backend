@@ -44,7 +44,7 @@ async def upload(
     file: UploadFile = File(...),
 ):
     logger.info(f'New upload request: request_id: {request_id}, signature: {signature}')
-    ipfs_client = IPFSClient(base_url=os.getenv('IPFS_ENDPOINT', 'http://localhost:5001'))
+    ipfs_client = IPFSClient(base_url=os.getenv('IPFS_ENDPOINT', 'http://host.docker.internal:5001'))
     resp = await ipfs_client.add(file)
     resp_add = json.loads(resp)
     file_hash = resp_add['Hash']
