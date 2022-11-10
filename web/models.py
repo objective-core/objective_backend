@@ -235,7 +235,7 @@ class VideoRequestManager:
                     WHERE ST_DistanceSphere(request_location, ST_MakePoint(%s,%s)) <= %s
                         AND request_end_time > %s
                     ORDER BY request_end_time DESC
-                ''', (long, lat, radius, now)
+                ''', (lat, long, radius, now)
                 )
                 results = []
                 rows = await cur.fetchall()
