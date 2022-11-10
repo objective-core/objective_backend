@@ -1,6 +1,5 @@
 import sys
 import logging
-import os
 
 import httpx
 from fastapi import (
