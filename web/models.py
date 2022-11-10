@@ -37,7 +37,7 @@ class VideoRequestManager:
         self.pg_conn_str = pg_conn_str
 
     async def add_request(self, request: VideoRequest):
-        async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
+        async with await psycopg.AsyncConnection.connect(self.pg_conn_str, autocommit=True) as conn:
             async with conn.cursor() as cur:
                 return await cur.execute('''
                     INSERT INTO video_request 
@@ -74,7 +74,7 @@ class VideoRequestManager:
                 )
 
     async def add_video(self, request_id: str, video: Video):
-        async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
+        async with await psycopg.AsyncConnection.connect(self.pg_conn_str, autocommit=True) as conn:
             async with conn.cursor() as cur:
                 await cur.execute('''
                     UPDATE video_request
@@ -169,3 +169,72 @@ class VideoRequestManager:
                         )
                     result.append(video_request)
                 return result
+
+    async def requests_by_location(
+            self,
+            lat: float,
+            long: float,
+            radius: int,
+    ) -> List[VideoRequest]:
+        async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('''
+                    SELECT
+                        request_id,
+                        ST_x(request_location),
+                        ST_y(request_location),
+                        request_radius,
+                        request_start_time,
+                        request_end_time,
+                        request_direction,
+                        reward,
+                        requestor_address,
+                        uploader_address,
+                        ST_x(actual_location),
+                        ST_y(actual_location),
+                        actual_median_direction,
+                        uploaded_at,
+                        actual_start_time,
+                        actual_end_time,
+                        file_hash
+                    FROM video_request
+                    WHERE ST_DistanceSphere(request_location, ST_MakePoint(%s,%s)) <= %s
+                    ORDER BY request_end_time DESC
+                ''', (long, lat, radius)
+                )
+                results = []
+                rows = await cur.fetchall()
+                for row in rows:
+                    request_id, lat, long, radius, start_time, end_time, \
+                    direction, reward, requestor_address, uploader_address, \
+                    actual_lat, actual_long, actual_median_direction, \
+                    uploaded_at, actual_start_time, actual_end_time, file_hash = row
+                    video_request = VideoRequest(
+                        id=request_id,
+                        location=Location(
+                            lat=lat,
+                            long=long,
+                            direction=direction,
+                            radius=radius,
+                        ),
+                        start_time=start_time,
+                        end_time=end_time,
+                        reward=reward,
+                        address=requestor_address,
+                    )
+                    if uploader_address:
+                        video_request.video = Video(
+                            uploader_address=uploader_address,
+                            location=Location(
+                                lat=actual_lat,
+                                long=actual_long,
+                                direction=actual_median_direction,
+                                radius=radius,
+                            ),
+                            uploaded_at=uploaded_at,
+                            start_time=actual_start_time,
+                            end_time=actual_end_time,
+                            file_hash=file_hash,
+                        )
+                    results.append(video_request)
+                return results

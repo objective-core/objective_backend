@@ -30,6 +30,7 @@ logger = logging.getLogger()
 app = FastAPI()
 pg_conn_str = f"host={os.getenv('PG_HOST', 'localhost')} dbname={os.getenv('PG_DB', 'obj')} user={os.getenv('PG_USER')} password={os.getenv('PG_PASSWORD')}"
 
+
 @app.post('/upload/')
 async def upload(
     lat: float = Form(...),
@@ -81,6 +82,7 @@ async def upload(
         content=json.loads(video.json()),
     )
 
+
 @app.get('/requests')
 async def get_requests():
     video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
@@ -88,6 +90,24 @@ async def get_requests():
     return JSONResponse(
         status_code=200,
         content={'requests': [json.loads(r.json()) for r in last_10_requests]},
+    )
+
+
+@app.get('/requests_by_location')
+async def requests_by_location(
+        lat: float,
+        long: float,
+        radius: int,
+):
+    video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
+    requests = await video_request_manager.requests_by_location(
+        lat=lat,
+        long=long,
+        radius=radius,
+    )
+    return JSONResponse(
+        status_code=200,
+        content={'requests': [json.loads(r.json()) for r in requests]},
     )
 
 
