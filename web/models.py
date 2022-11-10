@@ -207,7 +207,9 @@ class VideoRequestManager:
             lat: float,
             long: float,
             radius: int,
+            hide_expired: bool,
     ) -> List[VideoRequest]:
+        now = datetime.utcnow() if hide_expired else datetime(1970, 1, 1)
         async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
             async with conn.cursor() as cur:
                 await cur.execute('''
@@ -231,8 +233,9 @@ class VideoRequestManager:
                         file_hash
                     FROM video_request
                     WHERE ST_DistanceSphere(request_location, ST_MakePoint(%s,%s)) <= %s
+                        AND request_end_time > %s
                     ORDER BY request_end_time DESC
-                ''', (long, lat, radius)
+                ''', (long, lat, radius, now)
                 )
                 results = []
                 rows = await cur.fetchall()
