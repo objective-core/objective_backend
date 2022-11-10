@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 
 import psycopg
+from psycopg.rows import Row
 from pydantic import BaseModel
 from typing import List
 
@@ -35,6 +36,41 @@ class VideoRequest(BaseModel):
 class VideoRequestManager:
     def __init__(self, pg_conn_str: str):
         self.pg_conn_str = pg_conn_str
+
+    @classmethod
+    def to_video_request(cls, row: Row) -> VideoRequest:
+        request_id, lat, long, radius, start_time, end_time, \
+        direction, reward, requestor_address, uploader_address, \
+        actual_lat, actual_long, actual_median_direction, \
+        uploaded_at, actual_start_time, actual_end_time, file_hash = row
+        video_request = VideoRequest(
+            id=request_id,
+            location=Location(
+                lat=lat,
+                long=long,
+                direction=direction,
+                radius=radius,
+            ),
+            start_time=start_time,
+            end_time=end_time,
+            reward=reward,
+            address=requestor_address,
+        )
+        if uploader_address:
+            video_request.video = Video(
+                uploader_address=uploader_address,
+                location=Location(
+                    lat=actual_lat,
+                    long=actual_long,
+                    direction=actual_median_direction,
+                    radius=radius,
+                ),
+                uploaded_at=uploaded_at,
+                start_time=actual_start_time,
+                end_time=actual_end_time,
+                file_hash=file_hash,
+            )
+        return video_request
 
     async def add_request(self, request: VideoRequest):
         async with await psycopg.AsyncConnection.connect(self.pg_conn_str, autocommit=True) as conn:
@@ -104,7 +140,34 @@ class VideoRequestManager:
                     )
 
     async def get_request(self, request_id: str) -> VideoRequest:
-        raise NotImplementedError
+        async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('''
+                    SELECT
+                        request_id,
+                        ST_x(request_location),
+                        ST_y(request_location),
+                        request_radius,
+                        request_start_time,
+                        request_end_time,
+                        request_direction,
+                        reward,
+                        requestor_address,
+                        uploader_address,
+                        ST_x(actual_location),
+                        ST_y(actual_location),
+                        actual_median_direction,
+                        uploaded_at,
+                        actual_start_time,
+                        actual_end_time,
+                        file_hash
+                    FROM video_request
+                    WHERE request_id = %s
+                    ORDER BY request_end_time DESC
+                    LIMIT 10
+                ''', (request_id,)
+                )
+                return self.to_video_request(await cur.fetchone())
 
     async def get_last_10_requests(self) -> List[VideoRequest]:
         async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
@@ -133,42 +196,11 @@ class VideoRequestManager:
                     LIMIT 10
                 '''
                 )
-                result = []
+                results = []
                 rows = await cur.fetchall()
-                for record in rows:
-                    request_id, lat, long, radius, start_time, end_time,\
-                        direction, reward, requestor_address, uploader_address,\
-                        actual_lat, actual_long, actual_median_direction,\
-                        uploaded_at, actual_start_time, actual_end_time, file_hash = record
-                    video_request = VideoRequest(
-                        id=request_id,
-                        location=Location(
-                            lat=lat,
-                            long=long,
-                            direction=direction,
-                            radius=radius,
-                        ),
-                        start_time=start_time,
-                        end_time=end_time,
-                        reward=reward,
-                        address=requestor_address,
-                    )
-                    if uploader_address:
-                        video_request.video = Video(
-                            uploader_address=uploader_address,
-                            location=Location(
-                                lat=actual_lat,
-                                long=actual_long,
-                                direction=actual_median_direction,
-                                radius=radius,
-                            ),
-                            uploaded_at=uploaded_at,
-                            start_time=actual_start_time,
-                            end_time=actual_end_time,
-                            file_hash=file_hash,
-                        )
-                    result.append(video_request)
-                return result
+                for row in rows:
+                    results.append(self.to_video_request(row))
+                return results
 
     async def requests_by_location(
             self,
@@ -205,36 +237,77 @@ class VideoRequestManager:
                 results = []
                 rows = await cur.fetchall()
                 for row in rows:
-                    request_id, lat, long, radius, start_time, end_time, \
-                    direction, reward, requestor_address, uploader_address, \
-                    actual_lat, actual_long, actual_median_direction, \
-                    uploaded_at, actual_start_time, actual_end_time, file_hash = row
-                    video_request = VideoRequest(
-                        id=request_id,
-                        location=Location(
-                            lat=lat,
-                            long=long,
-                            direction=direction,
-                            radius=radius,
-                        ),
-                        start_time=start_time,
-                        end_time=end_time,
-                        reward=reward,
-                        address=requestor_address,
-                    )
-                    if uploader_address:
-                        video_request.video = Video(
-                            uploader_address=uploader_address,
-                            location=Location(
-                                lat=actual_lat,
-                                long=actual_long,
-                                direction=actual_median_direction,
-                                radius=radius,
-                            ),
-                            uploaded_at=uploaded_at,
-                            start_time=actual_start_time,
-                            end_time=actual_end_time,
-                            file_hash=file_hash,
-                        )
-                    results.append(video_request)
+                    results.append(self.to_video_request(row))
+                return results
+
+    async def requests_by_uploader_address(
+            self,
+            address: str,
+    ) -> List[VideoRequest]:
+        async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('''
+                    SELECT
+                        request_id,
+                        ST_x(request_location),
+                        ST_y(request_location),
+                        request_radius,
+                        request_start_time,
+                        request_end_time,
+                        request_direction,
+                        reward,
+                        requestor_address,
+                        uploader_address,
+                        ST_x(actual_location),
+                        ST_y(actual_location),
+                        actual_median_direction,
+                        uploaded_at,
+                        actual_start_time,
+                        actual_end_time,
+                        file_hash
+                    FROM video_request
+                    WHERE uploader_address = %s
+                    ORDER BY request_end_time DESC
+                ''', (address)
+                )
+                results = []
+                rows = await cur.fetchall()
+                for row in rows:
+                    results.append(self.to_video_request(row))
+                return results
+
+    async def requests_by_requestor_address(
+            self,
+            address: str,
+    ) -> List[VideoRequest]:
+        async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('''
+                    SELECT
+                        request_id,
+                        ST_x(request_location),
+                        ST_y(request_location),
+                        request_radius,
+                        request_start_time,
+                        request_end_time,
+                        request_direction,
+                        reward,
+                        requestor_address,
+                        uploader_address,
+                        ST_x(actual_location),
+                        ST_y(actual_location),
+                        actual_median_direction,
+                        uploaded_at,
+                        actual_start_time,
+                        actual_end_time,
+                        file_hash
+                    FROM video_request
+                    WHERE requestor_address = %s
+                    ORDER BY request_end_time DESC
+                ''', (address)
+                )
+                results = []
+                rows = await cur.fetchall()
+                for row in rows:
+                    results.append(self.to_video_request(row))
                 return results

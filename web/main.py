@@ -111,6 +111,34 @@ async def requests_by_location(
     )
 
 
+@app.get('/requests_by_uploader/{address}')
+async def requests_by_uploader(
+        address: str,
+):
+    video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
+    requests = await video_request_manager.requests_by_uploader_address(
+        address=address,
+    )
+    return JSONResponse(
+        status_code=200,
+        content={'requests': [json.loads(r.json()) for r in requests]},
+    )
+
+
+@app.get('/requests_by_requestor/{address}')
+async def requests_by_requestor(
+        address: str,
+):
+    video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
+    requests = await video_request_manager.requests_by_requestor_address(
+        address=address,
+    )
+    return JSONResponse(
+        status_code=200,
+        content={'requests': [json.loads(r.json()) for r in requests]},
+    )
+
+
 @app.post('/internal/request/')
 async def create_request(
     id: str = Form(...),
