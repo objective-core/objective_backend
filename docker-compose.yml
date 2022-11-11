@@ -4,6 +4,9 @@ volumes:
   postgres_data:
     name: postgres_data
     external: true
+  thumbnails:
+    name: thumbnails
+    external: true
 
 services:
   web:
@@ -36,3 +39,11 @@ services:
     build:
       context: .
       dockerfile: postgis.Dockerfile
+
+  thumbnailer:
+    build:
+      context: ./thumbnailer
+    restart: always
+    network_mode: host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

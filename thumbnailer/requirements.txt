@@ -1,0 +1,6 @@
+fastapi[all]
+ffmpeg
+asyncffmpeg
+aiofiles
+asynccpu
+httpx
