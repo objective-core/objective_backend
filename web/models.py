@@ -7,6 +7,10 @@ from pydantic import BaseModel
 from typing import List
 
 
+class RequestNotFound(Exception):
+    pass
+
+
 class Location(BaseModel):
     lat: float
     long: float
@@ -173,7 +177,10 @@ class VideoRequestManager:
                     LIMIT 10
                 ''', (request_id,)
                 )
-                return self.to_video_request(await cur.fetchone())
+                row = await cur.fetchone()
+                if not row:
+                    raise RequestNotFound
+                return self.to_video_request(row)
 
     async def get_last_10_requests(self) -> List[VideoRequest]:
         async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:

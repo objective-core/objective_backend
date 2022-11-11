@@ -21,6 +21,7 @@ from models import (
     Video,
     VideoRequest,
     Location,
+    RequestNotFound,
 )
 from ipfs import IPFSClient
 from verification import get_address
@@ -100,13 +101,14 @@ async def video_by_request_id(
         request_id: str,
 ):
     video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
-    request = await video_request_manager.get_request(
-        request_id=request_id,
-    )
-    if not request.video:
-        return JSONResponse(
-            status_code=404,
+    try:
+        request = await video_request_manager.get_request(
+            request_id=request_id,
         )
+    except RequestNotFound:
+        return JSONResponse(status_code=404)
+    if not request.video:
+        return JSONResponse(status_code=404)
     return JSONResponse(
         status_code=200,
         content={
