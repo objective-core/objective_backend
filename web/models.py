@@ -40,12 +40,13 @@ class VideoRequestManager:
 
     @classmethod
     def to_video_request(cls, row: Row) -> VideoRequest:
-        request_id, lat, long, radius, start_time, end_time, \
+        request_id, request_block_number, lat, long, radius, start_time, end_time, \
         direction, reward, requestor_address, uploader_address, \
         actual_lat, actual_long, actual_median_direction, \
         uploaded_at, actual_start_time, actual_end_time, file_hash = row
         video_request = VideoRequest(
             id=request_id,
+            block_number=request_block_number,
             location=Location(
                 lat=lat,
                 long=long,
@@ -149,6 +150,7 @@ class VideoRequestManager:
                 await cur.execute('''
                     SELECT
                         request_id,
+                        request_block_number,
                         ST_x(request_location),
                         ST_y(request_location),
                         request_radius,
@@ -179,6 +181,7 @@ class VideoRequestManager:
                 await cur.execute('''
                     SELECT
                         request_id,
+                        request_block_number,
                         ST_x(request_location),
                         ST_y(request_location),
                         request_radius,
@@ -219,6 +222,7 @@ class VideoRequestManager:
                 await cur.execute('''
                     SELECT
                         request_id,
+                        request_block_number,
                         ST_x(request_location),
                         ST_y(request_location),
                         request_radius,
@@ -256,6 +260,7 @@ class VideoRequestManager:
                 await cur.execute('''
                     SELECT
                         request_id,
+                        request_block_number,
                         ST_x(request_location),
                         ST_y(request_location),
                         request_radius,
@@ -292,6 +297,7 @@ class VideoRequestManager:
                 await cur.execute('''
                     SELECT
                         request_id,
+                        request_block_number,
                         ST_x(request_location),
                         ST_y(request_location),
                         request_radius,
