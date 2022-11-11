@@ -19,6 +19,7 @@ services:
       - PG_USER=${PG_USER}
       - PG_HOST=${PG_HOST}
       - PG_DB=obj
+      - WEB3_HTTP_PROVIDER_URL=${WEB3_HTTP_PROVIDER_URL}
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

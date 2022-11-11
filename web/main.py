@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import sys
@@ -14,6 +15,7 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse
 
+from events import pull_video_requests
 from models import (
     VideoRequestManager,
     Video,
@@ -171,6 +173,7 @@ async def create_request(
     address = 'requestor-address'  # TODO: Change to the real one from auth headers.
     video_request = VideoRequest(
         id=id,
+        block_number=0,
         location=Location(
             lat=lat,
             long=long,
@@ -190,6 +193,14 @@ async def create_request(
         status_code=201,
         content=json.loads(video_request.json()),
     )
+
+
+@app.on_event("startup")
+def schedule_pull_video_requests():
+    loop = asyncio.get_event_loop()
+    video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
+    loop.create_task(pull_video_requests(video_request_manager))
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
