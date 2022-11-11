@@ -95,6 +95,27 @@ async def get_requests():
     )
 
 
+@app.get('/video/{request_id}')
+async def video_by_request_id(
+        request_id: str,
+):
+    video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
+    request = await video_request_manager.get_request(
+        request_id=request_id,
+    )
+    if not request.video:
+        return JSONResponse(
+            status_code=404,
+        )
+    return JSONResponse(
+        status_code=200,
+        content={
+            'video_url': f'https://api.objective.camera/video/{request_id}',
+            'request_id': request_id,
+        }
+    )
+
+
 @app.get('/requests/{request_id}')
 async def requests_by_id(
         request_id: str,
