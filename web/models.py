@@ -25,6 +25,7 @@ class Video(BaseModel):
 
 class VideoRequest(BaseModel):
     id: str
+    block_number: int
     location: Location
     start_time: datetime
     end_time: datetime
@@ -79,6 +80,7 @@ class VideoRequestManager:
                     INSERT INTO video_request 
                     (
                         request_id,
+                        request_block_number,
                         request_location,
                         request_radius, 
                         request_start_time,
@@ -87,6 +89,7 @@ class VideoRequestManager:
                         reward,
                         requestor_address
                     ) VALUES (
+                        %s,
                         %s,
                         ST_SetSRID(ST_MakePoint(%s, %s), 4326),
                         %s,
@@ -98,6 +101,7 @@ class VideoRequestManager:
                     );
                 ''', (
                         request.id,
+                        request.block_number,
                         request.location.lat,
                         request.location.long,
                         request.location.radius,
@@ -314,3 +318,12 @@ class VideoRequestManager:
                 for row in rows:
                     results.append(self.to_video_request(row))
                 return results
+
+    async def max_request_block_number(self):
+        async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('''
+                    SELECT MAX(request_block_number)
+                    FROM video_request;
+                ''')
+                return await cur.fetchone()
