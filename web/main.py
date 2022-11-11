@@ -112,10 +112,10 @@ async def video_by_request_id(
     return JSONResponse(
         status_code=200,
         content={
-            'video-url': f'https://api.objective.camera/video/{request_id}',
-            'uploader-address': request.video.uploader_address,
-            'CID': request.video.file_hash,
-            'request_id': request_id,
+            'url': f'https://api.objective.camera/video/{request_id}',
+            'uploader': request.video.uploader_address,
+            'cid': request.video.file_hash,
+            'request': request_id,
         }
     )
 
