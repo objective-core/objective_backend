@@ -54,7 +54,7 @@ def generate_thumbnail(original_file_path: str, thumbnail_path: str):
     return result
 
 
-@app.get('/thumbnail/{cid}.png')
+@app.get('/thumbnails/{cid}.png')
 async def thumbnail(cid: str):
     thumbnail_path = f'/thumbnails/{cid}.png'
     if await is_path_exists(thumbnail_path):
