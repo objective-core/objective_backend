@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 import psycopg
@@ -222,8 +222,10 @@ class VideoRequestManager:
             long: float,
             radius: int,
             hide_expired: bool,
+            older_than: int = 3600 * 24 * 7
     ) -> List[VideoRequest]:
-        now = datetime.utcnow() if hide_expired else datetime(1970, 1, 1)
+        end_time = datetime.utcnow() if hide_expired else datetime(1970, 1, 1)
+        since = datetime.utcnow() - timedelta(seconds=older_than)
         async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
             async with conn.cursor() as cur:
                 await cur.execute('''
@@ -252,8 +254,9 @@ class VideoRequestManager:
                             request_end_time > %s
                             OR file_hash IS NOT NULL
                         )
+                        AND request_start_time > %s
                     ORDER BY request_end_time DESC
-                ''', (lat, long, radius, now)
+                ''', (lat, long, radius, end_time, since)
                 )
                 results = []
                 rows = await cur.fetchall()
