@@ -45,5 +45,7 @@ services:
       context: ./thumbnailer
     restart: always
     network_mode: host
+    volumes:
+      - thumbnails:/thumbnails
     extra_hosts:
       - "host.docker.internal:host-gateway"
