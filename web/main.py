@@ -45,7 +45,8 @@ async def upload(
 ):
     logger.info(f'New upload request: request_id: {request_id}, signature: {signature}')
     ipfs_client = IPFSClient(base_url=os.getenv('IPFS_ENDPOINT', 'http://localhost:5001'))
-    if ipfs_client.file_exists(expected_hash):
+    file_exists = await ipfs_client.file_exists(expected_hash)
+    if file_exists:
         file_hash = expected_hash
     else:
         return JSONResponse(
