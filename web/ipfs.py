@@ -35,3 +35,13 @@ class IPFSClient:
             resp = await client.post(f'{self.base_url}/api/v0/pin/add?arg={file_hash}')
             logger.info(f'resp[pin] {resp.text}')
             return resp.text
+
+    async def file_exists(
+        self,
+        file_hash: str,
+    ) -> bool:
+        """Checks if file exist locally."""
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(f'{self.base_url}/api/v0/block/stat?arg={file_hash}&offline=true')
+            logger.info(f'resp[stat] {resp.text}')
+            return resp.status_code == 200
