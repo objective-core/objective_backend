@@ -5,13 +5,10 @@ import sys
 from datetime import datetime
 from decimal import Decimal
 import os
-from typing import Optional
 
 import uvicorn
 from fastapi import (
     FastAPI,
-    File,
-    UploadFile,
     Form,
 )
 from fastapi.responses import JSONResponse
@@ -45,30 +42,17 @@ async def upload(
     expected_hash: str = Form(...),
     signature: str = Form(...),
     request_id: str = Form(...),
-    file: Optional[UploadFile] = File(...),
 ):
     logger.info(f'New upload request: request_id: {request_id}, signature: {signature}')
     ipfs_client = IPFSClient(base_url=os.getenv('IPFS_ENDPOINT', 'http://localhost:5001'))
-    if file:
-        resp = await ipfs_client.add(file)
-        resp_add = json.loads(resp)
-        file_hash = resp_add['Hash']
-        if file_hash != expected_hash:
-            return JSONResponse(
-                status_code=400,
-                content={
-                    'code': 'unexpected_hash',
-                    'msg': f'expected hash: {expected_hash}, actual: {file_hash}'
-                }
-            )
-    elif ipfs_client.file_exists(expected_hash):
+    if ipfs_client.file_exists(expected_hash):
         file_hash = expected_hash
     else:
         return JSONResponse(
             status_code=400,
             content={
                 'code': 'file_not_found',
-                'msg': 'file is not provided and file with expected_hash does not exist on the node'
+                'msg': 'file with expected_hash does not exist on the node'
             }
         )
     await ipfs_client.pin(file_hash)
