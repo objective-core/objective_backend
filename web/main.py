@@ -137,6 +137,7 @@ async def requests_by_location(
         long: float,
         radius: int,
         hide_expired: bool = False,
+        older_than: int = 3600 * 24 * 7
 ):
     video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
     requests = await video_request_manager.requests_by_location(
@@ -144,6 +145,7 @@ async def requests_by_location(
         long=long,
         radius=radius,
         hide_expired=hide_expired,
+        older_than=older_than,
     )
     return JSONResponse(
         status_code=200,

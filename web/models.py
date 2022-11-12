@@ -222,7 +222,7 @@ class VideoRequestManager:
             long: float,
             radius: int,
             hide_expired: bool,
-            older_than: int = 3600 * 24 * 7
+            older_than: int,
     ) -> List[VideoRequest]:
         end_time = datetime.utcnow() if hide_expired else datetime(1970, 1, 1)
         since = datetime.utcnow() - timedelta(seconds=older_than)
