@@ -8,6 +8,11 @@ ipfs.objective.camera {
 	tls bps@dzen.ws
 	encode zstd gzip
 
+	handle /thumbnails/* {
+		header Cache-Control "public, max-age=604800, must-revalidate"
+		reverse_proxy localhost:8001
+	}
+
 	handle /api/* {
 		method POST
 		basicauth {
