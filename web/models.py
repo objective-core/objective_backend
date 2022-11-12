@@ -248,7 +248,10 @@ class VideoRequestManager:
                         file_hash
                     FROM video_request
                     WHERE ST_DistanceSphere(request_location, ST_MakePoint(%s,%s)) <= %s
-                        AND request_end_time > %s
+                        AND (
+                            request_end_time > %s
+                            OR file_hash IS NOT NULL
+                        )
                     ORDER BY request_end_time DESC
                 ''', (lat, long, radius, now)
                 )
