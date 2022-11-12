@@ -222,10 +222,10 @@ class VideoRequestManager:
             long: float,
             radius: int,
             hide_expired: bool,
-            older_than: int,
+            since_seconds: int,
     ) -> List[VideoRequest]:
         end_time = datetime.utcnow() if hide_expired else datetime(1970, 1, 1)
-        since = datetime.utcnow() - timedelta(seconds=older_than)
+        since = datetime.utcnow() - timedelta(seconds=since_seconds)
         async with await psycopg.AsyncConnection.connect(self.pg_conn_str) as conn:
             async with conn.cursor() as cur:
                 await cur.execute('''
