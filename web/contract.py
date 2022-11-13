@@ -22,16 +22,19 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
 
 
-async def pull_video_requests(video_request_manager: VideoRequestManager):
+def contract_instance():
     logger.info('Loading VideoRequester contract')
-    # It should be possible to get contract ABI from the blockchain instead
-    with open('VideoRequester.json') as f:
-        contract_abi = json.load(f)
     # WebsocketProvider doesn't work with the following error:
     # TypeError: As of 3.10, the *loop* parameter was removed from Lock() since it is no longer necessary
     w3 = Web3(Web3.HTTPProvider(WEB3_HTTP_PROVIDER_URL))
-    contract = w3.eth.contract(address=VIDEO_REQUESTER_CONTRACT_ADDR, abi=contract_abi)
+    # It is possible to get contract ABI from the blockchain instead
+    with open('VideoRequester.json') as f:
+        contract_abi = json.load(f)
+    return w3.eth.contract(address=VIDEO_REQUESTER_CONTRACT_ADDR, abi=contract_abi)
 
+
+async def pull_video_requests(video_request_manager: VideoRequestManager):
+    contract = contract_instance()
     # We start pulling from the next block after the highest one to avoid duplicates
     from_block = (await video_request_manager.max_request_block_number())[0] or 0
     from_block += 1

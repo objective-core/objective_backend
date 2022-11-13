@@ -31,39 +31,42 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
         setChainlinkToken(0x326C977E6efc84E512bB9C30f76E30c160eD06FB);
         setChainlinkOracle(0xCC79157eb46F5624204f47AB42b3906cAA40eaB7);
     
-        jobId = 'ca98366cc7314957b8c012c72f05aeeb';
+        jobId = '53f9755920cd451a8fe46f5087468395';
         fee = (1 * LINK_DIVISIBILITY) / 10; // 0,1 * 10**18 (Varies by network and job)
     }
- 
+
     function submitRequest (string memory id, uint32 lat, uint32 long, uint32 start, uint32 end, uint16 direction) payable external {
         emit VideoRequested(msg.sender, lat, long, start, end, direction, msg.value);
-    
+
         requests[id] = VideoRequest(id, lat, long, start, end, direction, msg.value, "", msg.sender);
     }
 
-    function checkRequest(string memory id) public {
-        VideoRequest storage request = requests[id];
-
+    function checkRequest(string calldata id) public {
         Chainlink.Request memory req = buildChainlinkRequest(jobId, address(this), this.fulfillVideoRequest.selector);
 
-        string memory url = string.concat("https://635bc558aa7c3f113dc5c143.mockapi.io/api/v1/videos/", request.request_id);
+        string memory url = string.concat("https://api.objective.camera/video/", id);
 
-        req.add('getURL', url);
-        req.add('pathURL', 'url');
-
-        req.add('getID', url);
-        req.add('pathID', 'id');
+        req.add('urlCID', url);
+        req.add('pathCID', 'cid');
+        req.add('urlRequest', url);
+        req.add('pathRequest', 'request');
+        req.add('urlUploader', url);
+        req.add('pathUploader', 'uploader');
 
         sendChainlinkRequest(req, fee);
     }
 
     function fulfillVideoRequest(
-        bytes32 requestId,
-        string memory urlResponse,
-        string memory idResponse
-    ) public recordChainlinkFulfillment(requestId) {
-        VideoRequest storage request = requests[idResponse];
-        request.url = urlResponse;
+        bytes32 _requestId,
+        string calldata videoCID,
+        string calldata videoRequestId,
+        address payable _videoUploader
+    ) public recordChainlinkFulfillment(_requestId) {
+        if (bytes(videoCID).length == 0)
+            revert("Could not verify video.");
+
+        VideoRequest storage request = requests[videoRequestId];
+        request.url = videoCID;
 
         emit VideoReceived(request.url);
     }

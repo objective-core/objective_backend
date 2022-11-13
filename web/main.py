@@ -14,7 +14,7 @@ from fastapi import (
 from fastapi.responses import JSONResponse
 
 from eth_abi import encode
-from events import pull_video_requests
+from contract import pull_video_requests
 from models import (
     VideoRequestManager,
     Video,
