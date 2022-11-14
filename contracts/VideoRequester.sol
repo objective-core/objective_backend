@@ -81,6 +81,9 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
 
         (videoRequest.uploader, videoRequest.cid) = decode(data);
 
+        (bool sent,) = videoRequest.uploader.call{value: videoRequest.reward}("");
+        require(sent, "Failed to send Ether");
+
         emit VideoReceived(videoRequest.request_id, videoRequest.cid, videoRequest.uploader);
     }
 
