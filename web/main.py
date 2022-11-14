@@ -114,7 +114,7 @@ async def video_by_request_id(
             'uploader': request.video.uploader_address,
             'cid': request.video.file_hash,
             'request': request_id,
-            'abi': encode(['address', 'string'], (request.video.uploader_address, request.video.file_hash)),
+            'abi': '0x' + encode(['address', 'string'], (request.video.uploader_address, request.video.file_hash)).hex(),
         }
     )
 
