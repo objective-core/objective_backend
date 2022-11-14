@@ -87,6 +87,12 @@
 			{
 				"indexed": false,
 				"internalType": "string",
+				"name": "request_id",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
 				"name": "url",
 				"type": "string"
 			}
@@ -97,6 +103,12 @@
 	{
 		"anonymous": false,
 		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "request_id",
+				"type": "string"
+			},
 			{
 				"indexed": false,
 				"internalType": "address",
@@ -167,17 +179,35 @@
 		"inputs": [
 			{
 				"internalType": "bytes32",
-				"name": "requestId",
+				"name": "_requestId",
 				"type": "bytes32"
 			},
 			{
 				"internalType": "string",
-				"name": "urlResponse",
+				"name": "cid",
+				"type": "string"
+			}
+		],
+		"name": "fulfill",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "_requestId",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "string",
+				"name": "videoCID",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "idResponse",
+				"name": "videoRequestId",
 				"type": "string"
 			}
 		],
