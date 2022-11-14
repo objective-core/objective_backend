@@ -13,6 +13,7 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse
 
+from eth_abi import encode
 from events import pull_video_requests
 from models import (
     VideoRequestManager,
@@ -113,6 +114,7 @@ async def video_by_request_id(
             'uploader': request.video.uploader_address,
             'cid': request.video.file_hash,
             'request': request_id,
+            'abi': encode(['address', 'string'], (request.video.uploader_address, request.video.file_hash)),
         }
     )
 
