@@ -15,22 +15,38 @@ def check_rotation(path_video_file):
     # from the dictionary, meta_dict['streams'][0]['tags']['rotate'] is the key
     # we are looking for
     rotateFromMetadata = None
+    screenRotate = None
+
+    effectiveRotate = 0.0
 
     for idx, stream in enumerate(meta_dict['streams']):
         if stream.get('codec_type') == 'video':
             if 'tags' in stream:
                 if 'rotate' in stream['tags']:
-                    rotateFromMetadata = stream['tags']['rotate']
+                    rotateFromMetadata = int(stream['tags']['rotate'])
                     break
 
-    if rotateFromMetadata is None:
-        return
+    for idx, stream in enumerate(meta_dict['streams']):
+        if stream.get('codec_type') == 'video':
+            if 'side_data_list' in stream:
+                if 'rotation' in stream['side_data_list']:
+                    screenRotate = int(stream['side_data_list']['rotation'])
+                    break
 
-    if int(rotateFromMetadata) == 90:
+
+    if rotateFromMetadata is not None:
+        effectiveRotate += rotateFromMetadata
+
+    if screenRotate is not None:
+        # it's minus here, cause matrix rotation means actual orientation
+        # of the matrix, thus, we need to compensate it.
+        effectiveRotate += -screenRotate
+
+    if effectiveRotate == 90:
         return cv2.ROTATE_90_CLOCKWISE
-    elif int(rotateFromMetadata) == 180:
+    elif effectiveRotate == 180:
         return cv2.ROTATE_180
-    elif int(rotateFromMetadata) == 270:
+    elif effectiveRotate == 270:
         return cv2.ROTATE_90_COUNTERCLOCKWISE
 
 
@@ -185,9 +201,9 @@ if __name__ == '__main__':
     #lucas_kanade_method(video_path)
     # print('verified:', verify_video(f'{base_path}/QmaaSwJEg85fGka8PJ65U3MSXbknmdzUu7w1LguoJLk5Xs.mp4', 198, 100))
     # print('verified:', verify_video(f'{base_path}/QmPWhpsGM7zgMXrc3sSehJK4XQCrataXVkryw7yF2HZvXs.mp4', 224, 100))
-    print('verified:', verify_video(f'{base_path}/QmTE69pWvdadKBJkTk4F2RqYi2vD4bMyKZqVbSXqDH9HuK.mp4', 0, 100))
+    # print('verified:', verify_video(f'{base_path}/QmTE69pWvdadKBJkTk4F2RqYi2vD4bMyKZqVbSXqDH9HuK.mp4', 0, 100))
 
-    
+    print('verified:', verify_video(f'{base_path}/QmTE69pWvdadKBJkTk4F2RqYi2vD4bMyKZqVbSXqDH9HuK.mp4', 0, 100))
 
     # method = cv2.optflow.calcOpticalFlowSparseToDense
     # dense_optical_flow(method, video_path, to_gray=True)
