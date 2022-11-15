@@ -15,7 +15,7 @@ from models import (
 
 WEB3_HTTP_PROVIDER_URL = os.getenv('WEB3_HTTP_PROVIDER_URL')
 
-VIDEO_REQUESTER_CONTRACT_ADDR = '0xd69DEBd3865288D8159070222d65ddB6a7c158Cd'
+VIDEO_REQUESTER_CONTRACT_ADDR = '0xC6ea1442139Fd2938098E638213302b05DDD6CC6'
 VIDEO_REQUESTS_PULL_INTERVAL = 5
 
 CONTRACT_CALLER_ADDR = os.getenv('CONTRACT_CALLER_ADDR')
@@ -53,7 +53,7 @@ async def pull_video_requests(video_request_manager: VideoRequestManager):
 
             event_id = event.transactionHash.hex()
             video_request = VideoRequest(
-                id=str(event.args.id),
+                id=str(event.args.requestId),
                 tx_hash=event_id,
                 block_number=event.blockNumber,
                 location=Location(
