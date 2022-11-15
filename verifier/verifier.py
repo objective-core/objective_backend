@@ -12,6 +12,11 @@ def check_rotation(path_video_file):
 
     print(meta_dict)
 
+    # 'side_data_list': [
+    #     {'side_data_type': 'Display Matrix', 'displaymatrix': '\n00000000:            0       65536           0\n00000001:       -65536           0           0\n00000002:            0           0  1073741824\n',
+    #     'rotation': -90
+    #     }
+
     # from the dictionary, meta_dict['streams'][0]['tags']['rotate'] is the key
     # we are looking for
     rotateFromMetadata = None
@@ -29,10 +34,10 @@ def check_rotation(path_video_file):
     for idx, stream in enumerate(meta_dict['streams']):
         if stream.get('codec_type') == 'video':
             if 'side_data_list' in stream:
-                if 'rotation' in stream['side_data_list']:
-                    screenRotate = int(stream['side_data_list']['rotation'])
-                    break
-
+                for data_list_item in stream['side_data_list']:
+                    if 'rotation' in data_list_item:
+                        screenRotate = int(data_list_item['rotation'])
+                        break
 
     if rotateFromMetadata is not None:
         effectiveRotate += rotateFromMetadata
