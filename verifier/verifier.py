@@ -12,11 +12,6 @@ def check_rotation(path_video_file):
 
     print(meta_dict)
 
-    # 'side_data_list': [
-    #     {'side_data_type': 'Display Matrix', 'displaymatrix': '\n00000000:            0       65536           0\n00000001:       -65536           0           0\n00000002:            0           0  1073741824\n',
-    #     'rotation': -90
-    #     }
-
     # from the dictionary, meta_dict['streams'][0]['tags']['rotate'] is the key
     # we are looking for
     rotateFromMetadata = None
@@ -190,25 +185,3 @@ def verify_video(video_path, direction, second_direction, verbose=False):
         p0 = good_new.reshape(-1, 1, 2)
 
     return in_direction_time > 5000 and in_second_direction_time > 1000, round(in_direction_time, 2), round(in_second_direction_time, 2), rotateCode
-
-
-if __name__ == '__main__':
-    # verify_video('https://ipfs.objective.camera/QmaaSwJEg85fGka8PJ65U3MSXbknmdzUu7w1LguoJLk5Xs', 198, 100)
-    # verify_video('/Users/alex/projects/my/chainlink/objective_backend/QmaaSwJEg85fGka8PJ65U3MSXbknmdzUu7w1LguoJLk5Xs.mp4', 198, 100)
-
-    # -rw-r--r--@  1 alex  staff  39600665 Nov 15 12:20 QmPKP2tn7UP9B2EkLUNZwL7NTqAT3RyR5P7y56mFtsTUp9.mp4
-    # -rw-r--r--@  1 alex  staff  30928163 Nov 15 20:46 QmPWhpsGM7zgMXrc3sSehJK4XQCrataXVkryw7yF2HZvXs.mp4
-    # -rw-r--r--@  1 alex  staff  30492749 Nov 15 20:47 QmTE69pWvdadKBJkTk4F2RqYi2vD4bMyKZqVbSXqDH9HuK.mp4
-    # -rw-r--r--@  1 alex  staff  26689309 Nov 15 20:46 QmaaSwJEg85fGka8PJ65U3MSXbknmdzUu7w1LguoJLk5Xs.mp4
-
-    base_path = '/Users/alex/projects/my/chainlink/objective_backend/'
-
-    #lucas_kanade_method(video_path)
-    # print('verified:', verify_video(f'{base_path}/QmaaSwJEg85fGka8PJ65U3MSXbknmdzUu7w1LguoJLk5Xs.mp4', 198, 100))
-    # print('verified:', verify_video(f'{base_path}/QmPWhpsGM7zgMXrc3sSehJK4XQCrataXVkryw7yF2HZvXs.mp4', 224, 100))
-    # print('verified:', verify_video(f'{base_path}/QmTE69pWvdadKBJkTk4F2RqYi2vD4bMyKZqVbSXqDH9HuK.mp4', 0, 100))
-
-    print('verified:', verify_video(f'{base_path}/QmTE69pWvdadKBJkTk4F2RqYi2vD4bMyKZqVbSXqDH9HuK.mp4', 0, 100))
-
-    # method = cv2.optflow.calcOpticalFlowSparseToDense
-    # dense_optical_flow(method, video_path, to_gray=True)
