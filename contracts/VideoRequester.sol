@@ -13,7 +13,7 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
     uint private idCounter;
 
     struct VideoRequest {
-        uint request_id;
+        uint requestId;
         address requester;
         uint32 lat;
         uint32 long;
@@ -21,13 +21,13 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
         uint32 end;
         uint16 direction;
         uint reward;
-        bytes32 chainlink_request_id;
+        bytes32 chainlinkRequestId;
         string cid;
         address uploader;
     }
 
     event VideoRequested(
-        uint request_id,
+        uint requestId,
         address requester,
         uint32 lat,
         uint32 long,
@@ -37,13 +37,13 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
         uint reward
     );
     event VideoReceived(
-        uint request_id,
+        uint requestId,
         string cid,
         address uploader
     );
 
     mapping (uint => VideoRequest) requests;
-    mapping (bytes32 => uint) chainlinkIdToRequestId;
+    mapping (bytes32 => uint) chainlinkRequestIdToVideoRequestId;
  
     constructor() ConfirmedOwner(msg.sender) {
         // Goerli testnet
@@ -58,7 +58,7 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
     }
 
     function submitRequest(uint32 lat, uint32 long, uint32 start, uint32 end, uint16 direction) payable external {
-        requests[idCounter] = VideoRequest(idCounter, msg.sender, lat, long, start, end, direction, msg.value, "1", "1", address(0));
+        requests[idCounter] = VideoRequest(idCounter, msg.sender, lat, long, start, end, direction, msg.value, "", "", address(0));
 
         emit VideoRequested(idCounter, msg.sender, lat, long, start, end, direction, msg.value);
 
@@ -67,7 +67,7 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
 
     function checkRequest(uint id) public {
         // We only allow to call one checkRequest per time.
-        if(requests[id].chainlink_request_id == "") {
+        if(requests[id].chainlinkRequestId == "") {
             Chainlink.Request memory req = buildChainlinkRequest(jobId, address(this), this.fulfillVideoRequest.selector);
 
             string memory url = string.concat("https://api.objective.camera/video/", Strings.toString(id));
@@ -77,25 +77,39 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
 
             bytes32 requestId = sendChainlinkRequest(req, fee);
 
-            requests[id].chainlink_request_id = requestId;
-            chainlinkIdToRequestId[requestId] = id;
+            // We use this field as a lock, to make sure nobody does parallel
+            // requests for the same video. Otherwise, we might end up with
+            // doublespend.
+            requests[id].chainlinkRequestId = requestId;
+
+            // We use this map to make sure contract processes exactly
+            // the same VideoRequest in fullfill.
+            chainlinkRequestIdToVideoRequestId[requestId] = id;
         }
     }
 
-    // can anybody call me?
     function fulfillVideoRequest(
         bytes32 _requestId,
         bytes calldata data
     ) public recordChainlinkFulfillment(_requestId) {
-        uint videoRequestId = chainlinkIdToRequestId[_requestId];
+        uint videoRequestId = chainlinkRequestIdToVideoRequestId[_requestId];
         VideoRequest storage videoRequest = requests[videoRequestId];
 
         (videoRequest.uploader, videoRequest.cid) = decode(data);
 
-        (bool sent,) = videoRequest.uploader.call{value: videoRequest.reward}("");
-        require(sent, "Failed to send Ether");
+        bool sent;
 
-        emit VideoReceived(videoRequest.request_id, videoRequest.cid, videoRequest.uploader);
+        // Refund, since backend returns empty uploader.
+        if(videoRequest.uploader == address(0)) {
+            (sent,) = videoRequest.requester.call{value: videoRequest.reward}("");
+            require(sent, "Failed to send Ether");
+            return;
+        } else {
+            (sent,) = videoRequest.uploader.call{value: videoRequest.reward}("");
+            require(sent, "Failed to send Ether");
+
+            emit VideoReceived(videoRequest.requestId, videoRequest.cid, videoRequest.uploader);
+        }
     }
 
     function getCid(uint id) public view returns (string memory cid) {
@@ -103,9 +117,11 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
         cid = request.cid;
     }
 
-    // example of encoding to abi
-    function encode(address addr, string memory cid) public pure returns (bytes memory) {
-        return (abi.encode(addr, cid));
+    function dropChainlinkRequestId(uint id) public onlyOwner {
+        if(requests[id].chainlinkRequestId != "") {
+            VideoRequest storage request = requests[id];
+            request.chainlinkRequestId = "";
+        }
     }
 
     function decode(bytes memory data) public pure returns (address addr, string memory cid) {
