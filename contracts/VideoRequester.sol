@@ -3,15 +3,17 @@ pragma solidity 0.8.13;
 
 import 'https://github.com/smartcontractkit/chainlink/blob/master/contracts/src/v0.8/ChainlinkClient.sol';
 import 'https://github.com/smartcontractkit/chainlink/blob/master/contracts/src/v0.8/ConfirmedOwner.sol';
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Strings.sol";
  
 contract VideoRequester is ChainlinkClient, ConfirmedOwner {
     using Chainlink for Chainlink.Request;
 
     bytes32 private jobId;
     uint256 private fee;
+    uint private idCounter;
 
-    struct VideoRequest { 
-        string request_id;
+    struct VideoRequest {
+        uint request_id;
         address requester;
         uint32 lat;
         uint32 long;
@@ -19,12 +21,13 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
         uint32 end;
         uint16 direction;
         uint reward;
+        bytes32 chainlink_request_id;
         string cid;
         address uploader;
     }
 
     event VideoRequested(
-        string request_id,
+        uint request_id,
         address requester,
         uint32 lat,
         uint32 long,
@@ -34,13 +37,13 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
         uint reward
     );
     event VideoReceived(
-        string request_id,
+        uint request_id,
         string cid,
         address uploader
     );
 
-    mapping (string => VideoRequest) requests;
-    mapping (bytes32 => string) chainlinkIdToRequestId;
+    mapping (uint => VideoRequest) requests;
+    mapping (bytes32 => uint) chainlinkIdToRequestId;
  
     constructor() ConfirmedOwner(msg.sender) {
         // Goerli testnet
@@ -50,33 +53,41 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
         // source of job id: https://docs.chain.link/docs/any-api/testnet-oracles/
         jobId = '7da2702f37fd48e5b1b9a5715e3509b6'; // bytes job
         fee = (1 * LINK_DIVISIBILITY) / 10; // 0,1 * 10**18 (Varies by network and job)
+
+        idCounter = 1;
     }
 
-    function submitRequest(string memory id, uint32 lat, uint32 long, uint32 start, uint32 end, uint16 direction) payable external {
-        // TODO replace id with tx hash for release version.
-        requests[id] = VideoRequest(id, msg.sender, lat, long, start, end, direction, msg.value, "", address(0));
+    function submitRequest(uint32 lat, uint32 long, uint32 start, uint32 end, uint16 direction) payable external {
+        requests[idCounter] = VideoRequest(idCounter, msg.sender, lat, long, start, end, direction, msg.value, "1", "1", address(0));
 
-        emit VideoRequested(id, msg.sender, lat, long, start, end, direction, msg.value);
+        emit VideoRequested(idCounter, msg.sender, lat, long, start, end, direction, msg.value);
+
+        idCounter++;
     }
 
-    function checkRequest(string calldata id) public {
-        Chainlink.Request memory req = buildChainlinkRequest(jobId, address(this), this.fulfillVideoRequest.selector);
+    function checkRequest(uint id) public {
+        // We only allow to call one checkRequest per time.
+        if(requests[id].chainlink_request_id == "") {
+            Chainlink.Request memory req = buildChainlinkRequest(jobId, address(this), this.fulfillVideoRequest.selector);
 
-        string memory url = string.concat("https://api.objective.camera/video/", id);
+            string memory url = string.concat("https://api.objective.camera/video/", Strings.toString(id));
 
-        req.add('get', url);
-        req.add('path', 'abi');
+            req.add('get', url);
+            req.add('path', 'abi');
 
-        bytes32 requestId = sendChainlinkRequest(req, fee);
+            bytes32 requestId = sendChainlinkRequest(req, fee);
 
-        chainlinkIdToRequestId[requestId] = id;
+            requests[id].chainlink_request_id = requestId;
+            chainlinkIdToRequestId[requestId] = id;
+        }
     }
 
+    // can anybody call me?
     function fulfillVideoRequest(
         bytes32 _requestId,
         bytes calldata data
     ) public recordChainlinkFulfillment(_requestId) {
-        string memory videoRequestId = chainlinkIdToRequestId[_requestId];
+        uint videoRequestId = chainlinkIdToRequestId[_requestId];
         VideoRequest storage videoRequest = requests[videoRequestId];
 
         (videoRequest.uploader, videoRequest.cid) = decode(data);
@@ -87,7 +98,7 @@ contract VideoRequester is ChainlinkClient, ConfirmedOwner {
         emit VideoReceived(videoRequest.request_id, videoRequest.cid, videoRequest.uploader);
     }
 
-    function getCid(string memory id) public view returns (string memory cid) {
+    function getCid(uint id) public view returns (string memory cid) {
         VideoRequest memory request = requests[id];
         cid = request.cid;
     }
