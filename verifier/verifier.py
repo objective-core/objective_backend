@@ -7,20 +7,31 @@ import ffmpeg
 
 
 def check_rotation(path_video_file):
-     # this returns meta-data of the video file in form of a dictionary
-     meta_dict = ffmpeg.probe(path_video_file)
+    # this returns meta-data of the video file in form of a dictionary
+    meta_dict = ffmpeg.probe(path_video_file)
 
-     # from the dictionary, meta_dict['streams'][0]['tags']['rotate'] is the key
-     # we are looking for
-     rotateCode = None
-     if int(meta_dict['streams'][0]['tags']['rotate']) == 90:
-         rotateCode = cv2.ROTATE_90_CLOCKWISE
-     elif int(meta_dict['streams'][0]['tags']['rotate']) == 180:
-         rotateCode = cv2.ROTATE_180
-     elif int(meta_dict['streams'][0]['tags']['rotate']) == 270:
-         rotateCode = cv2.ROTATE_90_COUNTERCLOCKWISE
+    print(meta_dict)
 
-     return rotateCode
+    # from the dictionary, meta_dict['streams'][0]['tags']['rotate'] is the key
+    # we are looking for
+    rotateFromMetadata = None
+
+    for idx, stream in enumerate(meta_dict['streams']):
+        if stream.get('codec_type') == 'video':
+            if 'tags' in stream:
+                if 'rotate' in stream['tags']:
+                    rotateFromMetadata = stream['tags']['rotate']
+                    break
+
+    if rotateFromMetadata is None:
+        return
+
+    if int(rotateFromMetadata) == 90:
+        return cv2.ROTATE_90_CLOCKWISE
+    elif int(rotateFromMetadata) == 180:
+        return cv2.ROTATE_180
+    elif int(rotateFromMetadata) == 270:
+        return cv2.ROTATE_90_COUNTERCLOCKWISE
 
 
 def correct_rotation(frame, rotateCode):  
