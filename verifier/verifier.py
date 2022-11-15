@@ -55,10 +55,6 @@ def correct_rotation(frame, rotateCode):
 
 
 def verify_video(video_path, direction, second_direction, verbose=False):
-    target_movement_angle = second_direction - direction
-    # max error between target and actual movement angle
-    allowed_error = 20
-
     # Read the video 
     cap = cv2.VideoCapture(video_path)
  
@@ -75,7 +71,7 @@ def verify_video(video_path, direction, second_direction, verbose=False):
     # Create random colors
     color = np.random.randint(0, 255, (100, 3))
  
-     # check if video requires rotation
+    # check if video requires rotation
     rotateCode = check_rotation(video_path)
 
     # Take first frame and find corners in it
@@ -157,8 +153,9 @@ def verify_video(video_path, direction, second_direction, verbose=False):
             movement_y_angle = y_movement / height * one_height_angle
             # print('y_movement:', movement_y_angle)
 
+            # app starts recording only when the user is in the right direction already
             in_direction = abs(movement_y_angle - 0) < 30 and abs(movement_x_angle - 0) < 20
-            in_second_direction = abs(movement_y_angle - 0) < 30 and abs(movement_x_angle - target_movement_angle) < 20
+            in_second_direction = abs(movement_y_angle - 0) < 30 and abs(((direction + movement_x_angle) % 360) - second_direction) < 20
 
         # weird but happens sometimes
         if current_time > prev_time:
