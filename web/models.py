@@ -29,6 +29,7 @@ class Video(BaseModel):
 
 class VideoRequest(BaseModel):
     id: str
+    tx_hash: str
     block_number: int
     location: Location
     start_time: datetime
@@ -44,12 +45,13 @@ class VideoRequestManager:
 
     @classmethod
     def to_video_request(cls, row: Row) -> VideoRequest:
-        request_id, request_block_number, lat, long, radius, start_time, end_time, \
+        request_id, request_tx_hash, request_block_number, lat, long, radius, start_time, end_time, \
         direction, reward, requestor_address, uploader_address, \
         actual_lat, actual_long, actual_median_direction, \
         uploaded_at, actual_start_time, actual_end_time, file_hash = row
         video_request = VideoRequest(
             id=request_id,
+            tx_hash=request_tx_hash,
             block_number=request_block_number,
             location=Location(
                 lat=lat,
@@ -85,6 +87,7 @@ class VideoRequestManager:
                     INSERT INTO video_request 
                     (
                         request_id,
+                        request_tx_hash,
                         request_block_number,
                         request_location,
                         request_radius, 
@@ -94,6 +97,7 @@ class VideoRequestManager:
                         reward,
                         requestor_address
                     ) VALUES (
+                        %s,
                         %s,
                         %s,
                         ST_SetSRID(ST_MakePoint(%s, %s), 4326),
@@ -106,6 +110,7 @@ class VideoRequestManager:
                     );
                 ''', (
                         request.id,
+                        request.tx_hash,
                         request.block_number,
                         request.location.lat,
                         request.location.long,
@@ -154,6 +159,7 @@ class VideoRequestManager:
                 await cur.execute('''
                     SELECT
                         request_id,
+                        request_tx_hash,
                         request_block_number,
                         ST_x(request_location),
                         ST_y(request_location),
@@ -188,6 +194,7 @@ class VideoRequestManager:
                 await cur.execute('''
                     SELECT
                         request_id,
+                        request_tx_hash,
                         request_block_number,
                         ST_x(request_location),
                         ST_y(request_location),
@@ -231,6 +238,7 @@ class VideoRequestManager:
                 await cur.execute('''
                     SELECT
                         request_id,
+                        request_tx_hash,
                         request_block_number,
                         ST_x(request_location),
                         ST_y(request_location),
@@ -273,6 +281,7 @@ class VideoRequestManager:
                 await cur.execute('''
                     SELECT
                         request_id,
+                        request_tx_hash,
                         request_block_number,
                         ST_x(request_location),
                         ST_y(request_location),
@@ -310,6 +319,7 @@ class VideoRequestManager:
                 await cur.execute('''
                     SELECT
                         request_id,
+                        request_tx_hash,
                         request_block_number,
                         ST_x(request_location),
                         ST_y(request_location),

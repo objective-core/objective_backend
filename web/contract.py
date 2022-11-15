@@ -53,7 +53,8 @@ async def pull_video_requests(video_request_manager: VideoRequestManager):
 
             event_id = event.transactionHash.hex()
             video_request = VideoRequest(
-                id=event_id,
+                id=str(event.args.id),
+                tx_hash=event_id,
                 block_number=event.blockNumber,
                 location=Location(
                     lat=event.args.lat / 10000000 - 180,
@@ -83,8 +84,8 @@ def call_check_request(request_id: str):
     # Doesn't seem like a good idea to store the private key on the backend.
     # It's a quick and dirty implementation for PoC.
     # For production we must rethink the flow so that the backend doesn't transact any funds.
-    tx = contract.functions.checkRequest(request_id).build_transaction({'nonce': nonce})
+    tx = contract.functions.checkRequest(int(request_id)).build_transaction({'nonce': nonce})
     signed_tx = w3.eth.account.sign_transaction(tx, private_key=CONTRACT_CALLER_PRIVATE_KEY)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
 
-    logger.info(f'Attempted to call checkRequest of {CONTRACT_CALLER_ADDR}: {tx_hash}')
+    logger.info(f'Attempted to call checkRequest of contract {VIDEO_REQUESTER_CONTRACT_ADDR} for request {request_id}: {tx_hash}')
