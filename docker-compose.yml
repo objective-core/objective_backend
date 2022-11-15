@@ -23,6 +23,8 @@ services:
       - PG_HOST=${PG_HOST}
       - PG_DB=obj
       - WEB3_HTTP_PROVIDER_URL=${WEB3_HTTP_PROVIDER_URL}
+      - CONTRACT_CALLER_ADDR=${CONTRACT_CALLER_ADDR}
+      - CONTRACT_CALLER_PRIVATE_KEY=${CONTRACT_CALLER_PRIVATE_KEY}
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

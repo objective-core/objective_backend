@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS video_request (
     request_id TEXT PRIMARY KEY,
+    request_tx_hash TEXT NULL,
     request_block_number INT,
     request_location GEOMETRY NOT NULL,
     request_radius INT default 10,

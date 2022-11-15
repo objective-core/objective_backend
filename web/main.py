@@ -8,13 +8,18 @@ import os
 
 import uvicorn
 from fastapi import (
+    BackgroundTasks,
     FastAPI,
     Form,
 )
 from fastapi.responses import JSONResponse
 
+from contract import (
+    call_check_request,
+    pull_video_requests,
+)
 from eth_abi import encode
-from events import pull_video_requests
+from contract import pull_video_requests
 from models import (
     VideoRequestManager,
     Video,
@@ -35,6 +40,7 @@ pg_conn_str = f"host={os.getenv('PG_HOST', 'localhost')} dbname={os.getenv('PG_D
 
 @app.post('/upload/')
 async def upload(
+    background_tasks: BackgroundTasks,
     lat: float = Form(...),
     long: float = Form(...),
     start: float = Form(...),
@@ -57,6 +63,10 @@ async def upload(
                 'msg': 'file with expected_hash does not exist on the node'
             }
         )
+
+    # This is a very unreliable way to call a function of a smart contract.
+    # It's a quick and dirty implementation for PoC.
+    background_tasks.add_task(call_check_request, request_id)
     await ipfs_client.pin(file_hash)
     uploader_address = get_address(expected_hash, signature)
 
