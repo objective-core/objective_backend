@@ -7,6 +7,6 @@ RUN apt-get install ffmpeg pip -y
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY *.py .
+COPY *.py ./
 
 ENTRYPOINT ["python3", "main.py"]
