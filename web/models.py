@@ -29,7 +29,7 @@ class Video(BaseModel):
 
 class VideoRequest(BaseModel):
     id: str
-    tx_hash: str
+    tx_hash: str = None
     block_number: int
     location: Location
     start_time: datetime
