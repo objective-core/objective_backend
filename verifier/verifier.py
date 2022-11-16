@@ -111,6 +111,7 @@ def verify_video(video_path, direction, second_direction, verbose=False):
 
         prev_time = current_time
         current_time = cap.get(cv2.CAP_PROP_POS_MSEC)
+        print('frame time: ', current_time)
         if not ret:
             break
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

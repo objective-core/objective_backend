@@ -35,11 +35,14 @@ cache = {}
 async def verify(cid: str, direction: int, second_direction: int):
     content = cache.get(cid)
     if not content:
+        print(f'Downloading video {cid}...')
         resp = await get_original_video(base_url.format(cid))
+        print(f'Downloaded video {cid}.')
         original_file_path = f'/tmp/{cid}.mp4'
         async with aiofiles.open(original_file_path, 'wb') as out_file:
             await out_file.write(resp.content)
-        loop = asyncio.get_running_loop()
+        print(f'Stored video in temp file {original_file_path}.')
+        print(f'Start verification {original_file_path}.')
         is_verified, direction_time, second_direction_time, rotateCode = verify_video(original_file_path, direction, second_direction)
         await aiofiles.os.remove(original_file_path)
         content = {
