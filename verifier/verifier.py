@@ -72,7 +72,8 @@ def verify_video(video_path, direction, second_direction, verbose=False):
     color = np.random.randint(0, 255, (100, 3))
  
     # check if video requires rotation
-    rotateCode = check_rotation(video_path)
+    # rotateCode = check_rotation(video_path)
+    rotateCode = cv2.ROTATE_180
 
     # Take first frame and find corners in it
     ret, old_frame = cap.read()
@@ -147,15 +148,16 @@ def verify_video(video_path, direction, second_direction, verbose=False):
             avg_x_delta = sum(x_deltas) / len(x_deltas)
             x_movement += avg_x_delta
             movement_x_angle = x_movement / width * one_width_angle
-            # print('x_movement:', movement_x_angle)
+            print('x_movement:', movement_x_angle)
 
             avg_y_delta = sum(y_deltas) / len(y_deltas)
             y_movement += avg_y_delta
             movement_y_angle = y_movement / height * one_height_angle
-            # print('y_movement:', movement_y_angle)
+            print('y_movement:', movement_y_angle)
 
             # app starts recording only when the user is in the right direction already
             in_direction = abs(movement_y_angle - 0) < 30 and abs(movement_x_angle - 0) < 20
+            print((direction + movement_x_angle) % 360, second_direction, abs(((direction + movement_x_angle) % 360) - second_direction))
             in_second_direction = abs(movement_y_angle - 0) < 30 and abs(((direction + movement_x_angle) % 360) - second_direction) < 20
 
         # weird but happens sometimes
@@ -183,3 +185,9 @@ def verify_video(video_path, direction, second_direction, verbose=False):
         p0 = good_new.reshape(-1, 1, 2)
 
     return in_direction_time > 4000 and in_second_direction_time > 100, round(in_direction_time, 2), round(in_second_direction_time, 2), rotateCode
+
+
+if __name__ == '__main__':
+    url = 'https://api.objective.camera/verify/Qme7wQ9v5A9UguBg59kavhw34CcAsSrHMVtXDbtWfGawgw/0/237'
+
+    print(verify_video('/Users/alex/projects/my/chainlink/objective_backend/Qme7wQ9v5A9UguBg59kavhw34CcAsSrHMVtXDbtWfGawgw.mp4', 0, 237, verbose=True))
