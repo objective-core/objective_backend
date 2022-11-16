@@ -25,7 +25,7 @@ app = FastAPI()
 
 
 async def get_original_video(url):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=60) as client:
         return await client.get(url)
 
 
