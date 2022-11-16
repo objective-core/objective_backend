@@ -48,6 +48,7 @@ async def verify(cid: str, direction: int, second_direction: int):
             'second_direction_time': second_direction_time,
             'rotate_code': rotateCode,
         }
+        cache[cid] = content
 
     return JSONResponse(status_code=200, content=content)
 
