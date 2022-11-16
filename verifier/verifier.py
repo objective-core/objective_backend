@@ -182,4 +182,4 @@ def verify_video(video_path, direction, second_direction, verbose=False):
         old_gray = frame_gray.copy()
         p0 = good_new.reshape(-1, 1, 2)
 
-    return in_direction_time > 5000 and in_second_direction_time > 1000, round(in_direction_time, 2), round(in_second_direction_time, 2), rotateCode
+    return in_direction_time > 4000 and in_second_direction_time > 1000, round(in_direction_time, 2), round(in_second_direction_time, 2), rotateCode
