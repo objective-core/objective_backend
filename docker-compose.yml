@@ -51,3 +51,11 @@ services:
       - thumbnails:/thumbnails
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  verifier:
+    build:
+      context: ./verifier
+    restart: always
+    network_mode: host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

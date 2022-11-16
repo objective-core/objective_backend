@@ -1,0 +1,12 @@
+fastapi[all]
+ffmpeg
+asyncffmpeg
+aiofiles
+asynccpu
+httpx
+opencv-python
+opencv-contrib-python
+numpy
+matplotlib
+scipy
+scikit-learn

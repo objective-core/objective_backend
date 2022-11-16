@@ -1,7 +1,14 @@
 api.objective.camera {
 	tls bps@dzen.ws
 	encode zstd gzip
-	reverse_proxy localhost:8000
+
+	handle /verify/* {
+		reverse_proxy localhost:8002
+	}
+
+	handle {
+		reverse_proxy localhost:8000
+	}
 }
 
 ipfs.objective.camera {
