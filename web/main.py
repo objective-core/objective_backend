@@ -1,3 +1,4 @@
+import random
 import asyncio
 import json
 import logging
@@ -207,6 +208,7 @@ async def create_request(
     """Internal endpoint."""
     logger.info(f'New create request: request_id: {id}')
     address = 'requestor-address'  # TODO: Change to the real one from auth headers.
+    second_direction = (direction + (90 + random.randint(0, 180))) % 360
     video_request = VideoRequest(
         id=id,
         block_number=0,
@@ -216,6 +218,7 @@ async def create_request(
             direction=direction,
             radius=radius,
         ),
+        second_direction=second_direction,
         start_time=start,
         end_time=end,
         reward=reward,

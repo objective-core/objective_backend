@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS video_request (
     request_start_time TIMESTAMP NOT NULL,
     request_end_time TIMESTAMP NOT NULL,
     request_direction INT NOT NULL,
+    request_second_direction INT default 0,
     reward DECIMAL NOT NULL,
     requestor_address TEXT NOT NULL,
     uploader_address TEXT NULL,

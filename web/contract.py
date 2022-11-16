@@ -1,3 +1,4 @@
+import random
 import asyncio
 import json
 import logging
@@ -50,6 +51,7 @@ async def pull_video_requests(video_request_manager: VideoRequestManager):
         event_filter = contract.events.VideoRequested.createFilter(fromBlock=from_block)
         for event in event_filter.get_all_entries():
             logger.info(f'Retrieved VideoRequested event: {event}')
+            second_direction = (event.args.direction + (90 + random.randint(0, 180))) % 360
 
             event_id = event.transactionHash.hex()
             video_request = VideoRequest(
@@ -62,6 +64,7 @@ async def pull_video_requests(video_request_manager: VideoRequestManager):
                     direction=event.args.direction,
                     radius=0,
                 ),
+                second_direction=second_direction,
                 start_time=event.args.start,
                 end_time=event.args.end,
                 reward=event.args.reward,

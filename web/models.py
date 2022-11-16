@@ -32,6 +32,7 @@ class VideoRequest(BaseModel):
     tx_hash: str = None
     block_number: int
     location: Location
+    second_direction: int
     start_time: datetime
     end_time: datetime
     reward: Decimal
@@ -46,7 +47,7 @@ class VideoRequestManager:
     @classmethod
     def to_video_request(cls, row: Row) -> VideoRequest:
         request_id, request_tx_hash, request_block_number, lat, long, radius, start_time, end_time, \
-        direction, reward, requestor_address, uploader_address, \
+        direction, second_direction, reward, requestor_address, uploader_address, \
         actual_lat, actual_long, actual_median_direction, \
         uploaded_at, actual_start_time, actual_end_time, file_hash = row
         video_request = VideoRequest(
@@ -59,6 +60,7 @@ class VideoRequestManager:
                 direction=direction,
                 radius=radius,
             ),
+            second_direction=second_direction,
             start_time=start_time,
             end_time=end_time,
             reward=reward,
@@ -94,6 +96,7 @@ class VideoRequestManager:
                         request_start_time,
                         request_end_time,
                         request_direction,
+                        request_second_direction,
                         reward,
                         requestor_address
                     ) VALUES (
@@ -101,6 +104,7 @@ class VideoRequestManager:
                         %s,
                         %s,
                         ST_SetSRID(ST_MakePoint(%s, %s), 4326),
+                        %s,
                         %s,
                         %s,
                         %s,
@@ -118,6 +122,7 @@ class VideoRequestManager:
                         request.start_time,
                         request.end_time,
                         request.location.direction,
+                        request.second_direction,
                         request.reward,
                         request.address,
                     )
@@ -167,6 +172,7 @@ class VideoRequestManager:
                         request_start_time,
                         request_end_time,
                         request_direction,
+                        request_second_direction,
                         reward,
                         requestor_address,
                         uploader_address,
@@ -202,6 +208,7 @@ class VideoRequestManager:
                         request_start_time,
                         request_end_time,
                         request_direction,
+                        request_second_direction,
                         reward,
                         requestor_address,
                         uploader_address,
@@ -246,6 +253,7 @@ class VideoRequestManager:
                         request_start_time,
                         request_end_time,
                         request_direction,
+                        request_second_direction,
                         reward,
                         requestor_address,
                         uploader_address,
@@ -289,6 +297,7 @@ class VideoRequestManager:
                         request_start_time,
                         request_end_time,
                         request_direction,
+                        request_second_direction,
                         reward,
                         requestor_address,
                         uploader_address,
@@ -327,6 +336,7 @@ class VideoRequestManager:
                         request_start_time,
                         request_end_time,
                         request_direction,
+                        request_second_direction,
                         reward,
                         requestor_address,
                         uploader_address,
