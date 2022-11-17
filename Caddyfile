@@ -7,7 +7,8 @@ api.objective.camera {
 	}
 
 	handle_path /policy {
-		file_server * /root/objective_backend/policy.html
+		root * /root/objective_backend/policy
+		file_server
 	}
 
 	handle {
