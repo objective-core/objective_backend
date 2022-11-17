@@ -5,6 +5,7 @@ from sklearn.cluster import KMeans
 
 import ffmpeg
 
+import math
 
 def check_rotation(path_video_file):
     # this returns meta-data of the video file in form of a dictionary
@@ -54,6 +55,10 @@ def correct_rotation(frame, rotateCode):
      return cv2.rotate(frame, rotateCode)
 
 
+def angle_distance(target_angle, source_angle):
+    return math.atan2(math.sin((target_angle-source_angle) / 180 * math.pi), math.cos((target_angle-source_angle) / 180  * math.pi)) * 180 / math.pi
+
+
 def verify_video(video_path, direction, second_direction, verbose=False):
     # Read the video 
     cap = cv2.VideoCapture(video_path)
@@ -73,6 +78,7 @@ def verify_video(video_path, direction, second_direction, verbose=False):
  
     # check if video requires rotation
     rotateCode = check_rotation(video_path)
+    # rotateCode = cv2.ROTATE_180
 
     # Take first frame and find corners in it
     ret, old_frame = cap.read()
@@ -155,8 +161,10 @@ def verify_video(video_path, direction, second_direction, verbose=False):
             # print('y_movement:', movement_y_angle)
 
             # app starts recording only when the user is in the right direction already
-            in_direction = abs(movement_y_angle - 0) < 30 and abs(movement_x_angle - 0) < 20
-            in_second_direction = abs(movement_y_angle - 0) < 30 and abs(((direction + movement_x_angle) % 360) - second_direction) < 20
+            in_direction = abs(movement_y_angle - 0) < 30 and abs(movement_x_angle - 0) < 30
+
+            # print('angular distance', angle_distance(second_direction, (direction + movement_x_angle) % 360))
+            in_second_direction = abs(movement_y_angle - 0) < 30 and abs(angle_distance(second_direction, (direction + movement_x_angle) % 360)) < 30
 
         # weird but happens sometimes
         if current_time > prev_time:
@@ -183,3 +191,11 @@ def verify_video(video_path, direction, second_direction, verbose=False):
         p0 = good_new.reshape(-1, 1, 2)
 
     return in_direction_time > 4000 and in_second_direction_time > 100, round(in_direction_time, 2), round(in_second_direction_time, 2), rotateCode
+
+
+if __name__ == '__main__':
+    url = 'https://api.objective.camera/verify/Qme7wQ9v5A9UguBg59kavhw34CcAsSrHMVtXDbtWfGawgw/0/237'
+    # /verify/QmZERHgbAeuKg8qv58PsNSvGUkNeSwcwibjTx282xaQJzS/225/8
+    #  /verify/QmSCyrKeAsaXiNQJjsMXJxPPHpTWXvW91utm2jJAnFsQm5/225/8
+
+    print(verify_video('/Users/alex/projects/my/chainlink/objective_backend/QmSCyrKeAsaXiNQJjsMXJxPPHpTWXvW91utm2jJAnFsQm5.mp4', 225, 8, verbose=True))
