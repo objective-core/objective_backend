@@ -6,7 +6,7 @@ api.objective.camera {
 		reverse_proxy localhost:8002
 	}
 
-	handle_path /policy {
+	handle_path /policy/* {
 		root * /root/objective_backend/policy
 		file_server
 	}
