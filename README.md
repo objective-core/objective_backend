@@ -2,7 +2,7 @@
 
 Objective Camera is a [Chainlink Fall 2022 Hackathon](https://chainlinkfall2022.devpost.com) project.
 It aims to build a tamper proof mobile camera application and video distribution channel using Web3 technology stack.
-For more detail see the [hackaton submission](there-will-be-link).
+For more detail see the [hackaton submission](https://devpost.com/software/objective).
 
 _Disclaimer: this project is a quick and dirty implementation of the Objective Camera backend and is not ready for production use._
 
