@@ -27,6 +27,11 @@ downloads.objective.camera {
 		root * /root/objective_backend/apks
 		file_server
 	}
+
+	handle_path /images/* {
+		root * /root/objective_backend/images
+		file_server
+	}
 }
 
 ipfs.objective.camera {
