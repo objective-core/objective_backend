@@ -11,6 +11,11 @@ api.objective.camera {
 		file_server
 	}
 
+	handle_path /apks/* {
+		root * /root/objective_backend/apks
+		file_server
+	}
+
 	handle {
 		reverse_proxy localhost:8000
 	}
