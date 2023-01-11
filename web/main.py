@@ -6,6 +6,7 @@ import sys
 from datetime import datetime
 from decimal import Decimal
 import os
+import httpx
 
 import uvicorn
 from fastapi import (
@@ -39,6 +40,13 @@ app = FastAPI()
 pg_conn_str = f"host={os.getenv('PG_HOST', 'localhost')} dbname={os.getenv('PG_DB', 'obj')} user={os.getenv('PG_USER')} password={os.getenv('PG_PASSWORD')}"
 
 
+async def verify_request_video(cid, request):
+    url = f'http://localhost:8002/verify/{cid}/{request.location.direction}/{request.second_direction}'
+
+    async with httpx.AsyncClient() as client:
+        return await client.get(url)
+
+
 @app.post('/upload/')
 async def upload(
     background_tasks: BackgroundTasks,
@@ -65,11 +73,28 @@ async def upload(
             }
         )
 
+    await ipfs_client.pin(file_hash)
+    uploader_address = get_address(expected_hash, signature)
+
+    video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
+    try:
+        request = await video_request_manager.get_request(
+            request_id=request_id,
+        )
+    except RequestNotFound:
+        return JSONResponse(status_code=404)
+
+    try:
+        result = await verify_request_video(expected_hash, request)
+        if(not result.json()['is_verified']):
+            return JSONResponse(status_code=400, content={'is_verified': False})
+    except Exception as e:
+        logger.exception(e)
+        return JSONResponse(status_code=400, content={'is_verified': False})
+
     # This is a very unreliable way to call a function of a smart contract.
     # It's a quick and dirty implementation for PoC.
     background_tasks.add_task(call_check_request, request_id)
-    await ipfs_client.pin(file_hash)
-    uploader_address = get_address(expected_hash, signature)
 
     video = Video(
         uploader_address=uploader_address,
@@ -191,46 +216,6 @@ async def requests_by_requestor(
     return JSONResponse(
         status_code=200,
         content={'requests': [json.loads(r.json()) for r in requests]},
-    )
-
-
-@app.post('/internal/request/')
-async def create_request(
-    id: str = Form(...),
-    lat: float = Form(...),
-    long: float = Form(...),
-    radius: int = Form(...),
-    start: datetime = Form(...),
-    end: datetime = Form(...),
-    direction: int = Form(...),
-    reward: Decimal = Form(...),
-):
-    """Internal endpoint."""
-    logger.info(f'New create request: request_id: {id}')
-    address = 'requestor-address'  # TODO: Change to the real one from auth headers.
-    second_direction = (direction + (90 + random.randint(0, 180))) % 360
-    video_request = VideoRequest(
-        id=id,
-        block_number=0,
-        location=Location(
-            lat=lat,
-            long=long,
-            direction=direction,
-            radius=radius,
-        ),
-        second_direction=second_direction,
-        start_time=start,
-        end_time=end,
-        reward=reward,
-        address=address,
-    )
-    video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
-    await video_request_manager.add_request(
-        request=video_request,
-    )
-    return JSONResponse(
-        status_code=201,
-        content=json.loads(video_request.json()),
     )
 
 

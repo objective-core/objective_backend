@@ -265,12 +265,17 @@ class VideoRequestManager:
                         actual_end_time,
                         file_hash
                     FROM video_request
-                    WHERE ST_DistanceSphere(request_location, ST_MakePoint(%s,%s)) <= %s
-                        AND (
-                            request_end_time > %s
-                            OR file_hash IS NOT NULL
+                    WHERE
+                        (
+                            ST_DistanceSphere(request_location, ST_MakePoint(%s,%s)) <= %s
+                            AND (
+                                request_end_time > %s
+                                OR file_hash IS NOT NULL
+                            )
+                            AND request_start_time > %s
+                        ) OR (
+                            request_id in ('2', '3', '5', '22', '23', '24', '27', '30', '31', '52', '53', '54', '55', '56', '57', '58')
                         )
-                        AND request_start_time > %s
                     ORDER BY request_end_time DESC
                 ''', (lat, long, radius, end_time, since)
                 )

@@ -48,34 +48,38 @@ async def pull_video_requests(video_request_manager: VideoRequestManager):
     while True:
         logger.info(f'Pulling VideoRequested events from block {from_block}')
 
-        event_filter = contract.events.VideoRequested.createFilter(fromBlock=from_block)
-        for event in event_filter.get_all_entries():
-            logger.info(f'Retrieved VideoRequested event: {event}')
-            second_direction = (event.args.direction + (90 + random.randint(0, 180))) % 360
+        try:
+            event_filter = contract.events.VideoRequested.createFilter(fromBlock=from_block)
+            for event in event_filter.get_all_entries():
+                logger.info(f'Retrieved VideoRequested event: {event}')
+                second_direction = (event.args.direction + (90 + random.randint(0, 180))) % 360
 
-            event_id = event.transactionHash.hex()
-            video_request = VideoRequest(
-                id=str(event.args.requestId),
-                tx_hash=event_id,
-                block_number=event.blockNumber,
-                location=Location(
-                    lat=event.args.lat / 10000000 - 180,
-                    long=event.args.long / 10000000 - 180,
-                    direction=event.args.direction,
-                    radius=0,
-                ),
-                second_direction=second_direction,
-                start_time=event.args.start,
-                end_time=event.args.end,
-                reward=event.args.reward,
-                address=event.args.requester,
-            )
-            try:
-                await video_request_manager.add_request(video_request)
-            except psycopg.errors.UniqueViolation:
-                logger.info(f'Ignoring duplicate VideoRequested event {event_id}')
+                event_id = event.transactionHash.hex()
+                video_request = VideoRequest(
+                    id=str(event.args.requestId),
+                    tx_hash=event_id,
+                    block_number=event.blockNumber,
+                    location=Location(
+                        lat=event.args.lat / 10000000 - 180,
+                        long=event.args.long / 10000000 - 180,
+                        direction=event.args.direction,
+                        radius=0,
+                    ),
+                    second_direction=second_direction,
+                    start_time=event.args.start,
+                    end_time=event.args.end,
+                    reward=event.args.reward,
+                    address=event.args.requester,
+                )
+                try:
+                    await video_request_manager.add_request(video_request)
+                except psycopg.errors.UniqueViolation:
+                    logger.info(f'Ignoring duplicate VideoRequested event {event_id}')
 
-            from_block = max(event.blockNumber + 1, from_block)
+                from_block = max(event.blockNumber + 1, from_block)
+        except Exception as e:
+            logger.exception(e)
+
         await asyncio.sleep(VIDEO_REQUESTS_PULL_INTERVAL)
 
 
