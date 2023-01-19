@@ -65,7 +65,7 @@ async def upload(
     logger.info(f'New upload request: request_id: {request_id}, signature: {signature}')
 
     # check if file exists in /root/videos folder, name of file - expected_hash
-    file_exists = os.path.isfile(f'/root/videos/{expected_hash}')
+    file_exists = os.path.isfile(f'/videos/{expected_hash}')
 
     if file_exists:
         file_hash = expected_hash
@@ -229,7 +229,7 @@ async def add_file(file: UploadFile = File(...)):
     contents = await file.read()
     file_hash = hashlib.sha256(contents).hexdigest()
 
-    with open(f'/root/videos/{file_hash}', 'wb') as f:
+    with open(f'/videos/{file_hash}', 'wb') as f:
         f.write(contents)
 
     return JSONResponse(

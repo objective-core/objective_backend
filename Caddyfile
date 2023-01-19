@@ -84,7 +84,7 @@ ipfs.objective.camera {
 	}
 
 	handle {
-		root * /root/videos
+		root * /var/lib/docker/volumes/videos/_data
 		file_server
 	}
 }
