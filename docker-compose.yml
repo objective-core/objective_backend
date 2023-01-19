@@ -10,6 +10,9 @@ volumes:
   ipfs_data:
     name: ipfs_data
     external: true
+  videos:
+    name: videos
+    external: true
 
 services:
   web:
@@ -20,6 +23,8 @@ services:
     depends_on:
       - "postgres"
     network_mode: host
+    volumes:
+      - videos:/videos
     environment:
       - PG_PASSWORD=${PG_PASSWORD}
       - PG_USER=${PG_USER}

@@ -228,6 +228,7 @@ async def requests_by_requestor(
 async def add_file(file: UploadFile = File(...)):
     contents = await file.read()
     file_hash = hashlib.sha256(contents).hexdigest()
+
     with open(f'/root/videos/{file_hash}', 'wb') as f:
         f.write(contents)
 
