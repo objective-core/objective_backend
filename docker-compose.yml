@@ -62,11 +62,3 @@ services:
     network_mode: host
     extra_hosts:
       - "host.docker.internal:host-gateway"
-
-  ipfs:
-    image: ipfs/kubo
-    restart: always
-    network_mode: host
-    cpus: 0.3
-    volumes:
-      - ipfs_data:/data/ipfs
