@@ -19,7 +19,7 @@ from verifier import verify_video
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
 
-base_url = 'http://localhost:8080/ipfs/{}'
+base_url = 'https://ipfs.objective.camera/{}'
 
 app = FastAPI()
 

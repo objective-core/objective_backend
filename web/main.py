@@ -7,12 +7,14 @@ from datetime import datetime
 from decimal import Decimal
 import os
 import httpx
+import hashlib
 
 import uvicorn
 from fastapi import (
     BackgroundTasks,
     FastAPI,
     Form,
+    UploadFile
 )
 from fastapi.responses import JSONResponse
 
@@ -29,7 +31,6 @@ from models import (
     Location,
     RequestNotFound,
 )
-from ipfs import IPFSClient
 from verification import get_address
 
 
@@ -60,8 +61,10 @@ async def upload(
     request_id: str = Form(...),
 ):
     logger.info(f'New upload request: request_id: {request_id}, signature: {signature}')
-    ipfs_client = IPFSClient(base_url=os.getenv('IPFS_ENDPOINT', 'http://localhost:5001'))
-    file_exists = await ipfs_client.file_exists(expected_hash)
+
+    # check if file exists in /root/videos folder, name of file - expected_hash
+    file_exists = os.path.isfile(f'/root/videos/{expected_hash}')
+
     if file_exists:
         file_hash = expected_hash
     else:
@@ -73,7 +76,6 @@ async def upload(
             }
         )
 
-    await ipfs_client.pin(file_hash)
     uploader_address = get_address(expected_hash, signature)
 
     video_request_manager = VideoRequestManager(pg_conn_str=pg_conn_str)
@@ -216,6 +218,20 @@ async def requests_by_requestor(
     return JSONResponse(
         status_code=200,
         content={'requests': [json.loads(r.json()) for r in requests]},
+    )
+
+
+# handler uploads file to directory /root/videos, assignes hash, and returns it in Hash field
+@app.post('/api/v0/add')
+async def add_file(file: UploadFile = File(...)):
+    contents = await file.read()
+    file_hash = hashlib.sha256(contents).hexdigest()
+    with open(f'/root/videos/{file_hash}', 'wb') as f:
+        f.write(contents)
+
+    return JSONResponse(
+        status_code=200,
+        content={'Hash': file_hash},
     )
 
 

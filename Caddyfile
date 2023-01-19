@@ -67,6 +67,14 @@ ipfs.objective.camera {
 		reverse_proxy localhost:8001
 	}
 
+	handle /api/v0/add {
+		method POST
+		basicauth {
+			App $2b$12$6glpxEGTBysQo10u9l/i0OwO5ykA7gPMO4ohFCqTikz66H.fw..we
+		}
+		reverse_proxy localhost:8000
+	}
+
 	handle /api/* {
 		method POST
 		basicauth {
@@ -76,7 +84,7 @@ ipfs.objective.camera {
 	}
 
 	handle {
-		uri replace / /ipfs/
-		reverse_proxy localhost:8080
+		root * /root/videos
+		file_server
 	}
 }
