@@ -14,9 +14,11 @@ from fastapi import (
     BackgroundTasks,
     FastAPI,
     Form,
-    UploadFile
+    UploadFile,
+    File,
 )
 from fastapi.responses import JSONResponse
+
 
 from contract import (
     call_check_request,
